@@ -25,8 +25,6 @@ class Cell:
 class CellGroup:
     def __init__(self, L_cell):
         self.L_cell = L_cell
-        for (j, cell) in enumerate(L_cell):
-            cell.index = j
 
 
 class Exosome:
@@ -46,10 +44,9 @@ class Molecules:
 
 
 class Springbok:
-    def __init__(self, L_cell_group, pde_stepper, L_f, clock_start, clock_end):
+    def __init__(self, L_cell_group, pde_stepper, clock_start, clock_end):
         self.L_cell_group = L_cell_group
         self.pde_stepper = pde_stepper
-        self.L_f = L_f
         self.clock_start = clock_start
         self.clock_end = clock_end
 
@@ -72,6 +69,6 @@ class Springbok:
                         i0 = int(xy[0] / pde.dx)
                         a_secrete[i0] += s[j] / pde.dx
 
-            for (pde, f) in zip(self.pde_stepper.L_pde, self.L_f):
-                pde.f = f(*L_a_secrete)
+            for pde in self.pde_stepper.L_pde:
+                pde.f = pde.f_functional(*L_a_secrete)
             self.pde_stepper.step(self.clock)
