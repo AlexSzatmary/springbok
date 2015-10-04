@@ -27,6 +27,16 @@ class CellGroup:
         self.L_cell = L_cell
 
 
+class RectCellGroup(CellGroup):
+    def __init__(self, CellType, xya, xyb, n_cell, seed=0, **kwargs):
+        self.xya = xya
+        self.xyb = xyb
+        L_cell = [CellType(xy_0=xy_0, index=(j + seed), **kwargs)
+                  for (j, xy_0) in
+                  enumerate((xyb - xya) * np.random.random((n_cell, 2)) + xya)]
+        super().__init__(L_cell)
+
+
 class Exosome:
     def __init__(self, properties):
         pass
@@ -51,7 +61,7 @@ class Springbok:
         self.clock_end = clock_end
 
     def run(self):
-        for self.clock in range(self.clock_start, self.clock_end):
+        for self.clock in range(self.clock_start, self.clock_end + 1):
             L_condition_interp = [
                 (interp1d(pde.x, pde.u[self.clock - 1]),
                  interp1d(pde.x[1:-1], tiger.opdudx(pde.u[self.clock - 1], pde.dx)))

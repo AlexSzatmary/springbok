@@ -5,7 +5,7 @@ import sys
 import springbok
 from springbok import tiger
 
-set_name = 'n_mixed'
+set_name = 'n_BLT'
 
 def FRO(c):
     return c / (1. + c)
@@ -49,17 +49,16 @@ class Neutrophil(springbok.Cell):
         return np.array([0., 30.]) * FRO(L_condition[0][0])
 
 
-class FPRpos(Neutrophil):
+class BLTpos(Neutrophil):
+    pass
+
+
+class BLT0(Neutrophil):
     def orient(self, L_condition):
         super().orient([L_condition[0], (0., 0.)])
 
-
-class FPR0(Neutrophil):
-    def orient(self, L_condition):
-        super().orient([(0., 0.), L_condition[1]])
-
-    def secrete(self, L_condition):
-        return np.array([0., 0.])
+    # def secrete(self, L_condition):
+    #     return np.array([0., 0.])
 
 
 def make_pde_stepper(ell):
@@ -90,26 +89,32 @@ def make_pde_stepper(ell):
         dt=10., Nt=61)
     return pde_stepper
 
-def setup(pde_stepper=make_pde_stepper(1000.), name='n_mixed'):
+def setup(pde_stepper=make_pde_stepper(1000.), has_BLT=True, name='n_BLT'):
     n_neutrophil = 100
-    L_FPRpos = [FPRpos(xy_0=xy_0, n_t=61)
-                for xy_0 in
-                1000. * np.random.random((n_neutrophil // 2, 2)) +
-                np.array([1000., 0.])]
-    L_FPR0 = [FPR0(xy_0=xy_0, n_t=61)
-              for xy_0 in
-              1000. * np.random.random((n_neutrophil // 2, 2)) +
-              np.array([1000., 0.])
-              ]
-    L_cell_group = [springbok.CellGroup(L_FPRpos),
-                    springbok.CellGroup(L_FPR0)]
-    
+    if has_BLT:
+        CellType = BLTpos
+    else:
+        CellType = BLT0
+    cg = springbok.RectCellGroup(
+        CellType,
+        np.array([1000., 0.]), np.array([2000., 1000.]),
+        n_neutrophil, n_t=61)
     model = springbok.Springbok(
-        L_cell_group=L_cell_group, pde_stepper=pde_stepper,
+        L_cell_group=[cg], pde_stepper=pde_stepper,
         clock_start=1, clock_end=60)
     model.name = name
     model.set_name = set_name
     return model
 
-def make_vary_ell(L_ell=[1e2, 3e2, 1e3, 3e3, 1e4]):
-    return [setup(pde_stepper=make_pde_stepper(ell), name='n_mixed-{:.2e}'.format(ell)) for ell in L_ell]
+def make_vary_ell(L_ell=[1e2, 1e3, 1e4], L_has_BLT=[False, True]):
+    L_runs = []
+    for ell in L_ell:
+        for has_BLT in L_has_BLT:
+            run = setup(pde_stepper=make_pde_stepper(ell), has_BLT=has_BLT,
+                        name=('n_BLT-' + ('BLT' if has_BLT else 'BLT0') +
+                              '-{:.2e}').format(ell))
+            run.ell = ell
+            run.has_BLT = has_BLT
+            L_runs.append(run)
+    return L_runs
+            

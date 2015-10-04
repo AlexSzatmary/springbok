@@ -66,7 +66,7 @@ def setup(pde_stepper=make_pde_stepper(1000.), name='nsg'):
     
     model = springbok.Springbok(
         L_cell_group=[springbok.CellGroup(L_cell)], pde_stepper=pde_stepper,
-        clock_start=1, clock_end=61)
+        clock_start=1, clock_end=60)
     model.name = name
     model.set_name = set_name
     return model
