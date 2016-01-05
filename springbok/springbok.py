@@ -31,9 +31,11 @@ class RectCellGroup(CellGroup):
     def __init__(self, CellType, xya, xyb, n_cell, seed=0, **kwargs):
         self.xya = xya
         self.xyb = xyb
+        self.random_state = np.random.RandomState(seed)
         L_cell = [CellType(xy_0=xy_0, index=(j + seed), **kwargs)
                   for (j, xy_0) in
-                  enumerate((xyb - xya) * np.random.random((n_cell, 2)) + xya)]
+                  enumerate((xyb - xya) * self.random_state.rand(n_cell, 2) +
+                            xya)]
         super().__init__(L_cell)
 
 
@@ -78,6 +80,9 @@ class Springbok:
                             zip(L_a_secrete, self.pde_stepper.L_pde)):
                         i0 = int(xy[0] / pde.dx)
                         a_secrete[i0] += s[j] / pde.dx
+                        # a_secrete[i0 - 1] += s[j] / pde.dx / 4.
+                        # a_secrete[i0] += s[j] / pde.dx / 2.
+                        # a_secrete[i0 + 1] += s[j] / pde.dx / 4.
 
             for pde in self.pde_stepper.L_pde:
                 pde.f = pde.f_functional(*L_a_secrete)
