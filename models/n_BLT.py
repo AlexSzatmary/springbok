@@ -16,7 +16,7 @@ def DFRO(c, dcdx, ell):
 
 class Neutrophil(springbok.Cell):
     def __init__(
-            self, length=10., sensitivity=200., persistence=10., speed=1.,
+            self, length=10., sensitivity=200., persistence=1., speed=10.,
             n_t=None, xy_0=None, K_d_F=1., K_d_L=1., index=None):
         self.length = length
         self.sensitivity = sensitivity
@@ -86,7 +86,7 @@ def make_pde_stepper(ell):
 
     pde_stepper = tiger.CoupledPDEStepper2(
         L_pde=[F_pde, LTB_pde],
-        dt=10., Nt=61)
+        dt=1., Nt=61)
     return pde_stepper
 
 def setup(pde_stepper=make_pde_stepper(1000.), has_BLT=True, name='n_BLT'):
