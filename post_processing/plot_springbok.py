@@ -1,5 +1,6 @@
 import numpy as np
 from . import platypus
+import springbok
 import os
 
 
@@ -296,3 +297,17 @@ def confection1(model):
             color_f=platypus.color_f_color)
     fig.savefig(model.name + 'confection1', path=path)
     return fig
+
+def get_range_time_averaged(model, CI_threshold):
+    return np.mean([get_range(model, CI_threshold, j) for j in range(model.pde_stepper.Nt)])
+
+def get_range(model, CI_threshold, j):
+    a_kappa = get_a_kappa(model, j)
+#    return np.sum(a_kappa > 1.16) * model.pde_stepper.L_pde[0].dx # 1.16 is kappa threshold for CI_threshold = 0.5
+    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx # 0.4 is kappa threshold for CI_threshold = 0.2
+
+def get_a_kappa(model, j):
+    a_L_condition = np.array([(pde.u[j, 1:-1], springbok.tiger.opdudx(pde.u[j], pde.dx))
+                              for pde in model.pde_stepper.L_pde])
+    cell = model.L_cell_group[0].L_cell[0]
+    return np.array([cell.kappa(a_L_condition[:, :, i]) for i in range(np.size(a_L_condition, 2))])
