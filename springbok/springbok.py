@@ -11,7 +11,7 @@ class Cell:
     def __init__(self, properties):
         pass
 
-    def orient(self, L_condition):
+    def orient(self, L_condition, clock=None):
         pass
 
     def move(self, clock, dt, L_condition):
@@ -73,9 +73,9 @@ class Springbok:
                 for c in g.L_cell:
                     xy = c.a_xy[self.clock - 1]
                     L_condition = [(f_c(xy[0]), f_dcdx(xy[0])) for (pde, (f_c, f_dcdx)) in zip(self.pde_stepper.L_pde, L_condition_interp)]
-                    c.orient(L_condition)
+                    c.orient(L_condition, clock=self.clock)
                     c.move(self.clock, self.pde_stepper.dt, L_condition)
-                    s = c.secrete(L_condition)
+                    s = c.secrete(L_condition, clock=self.clock)
                     for (j, (a_secrete, pde)) in enumerate(
                             zip(L_a_secrete, self.pde_stepper.L_pde)):
                         i0 = int(xy[0] / pde.dx)
