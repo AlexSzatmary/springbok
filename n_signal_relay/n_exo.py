@@ -13,19 +13,23 @@ def FRO(c):
 def DFRO(c, dcdx, ell):
     return ell * dcdx / (c + 1) ** 2
 
+def get_d_gen_props():
+    return dict(Nt=61)
+
 def get_d_N_props():
     return dict(
         length=10., persistence=1., speed=10.,
         sensitivity_F=200., sensitivity_L=200., F_xt=1e10,
         sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
-        K_d_F=1., K_d_L=1.)
+        K_d_F=1., K_d_L=1., n=700, x_max=7000.)
 
 def get_d_E_props():
     return dict(sigma_EL0=1., gamma_E=0.01)
 
-def get_d_PDE_props():
-    d_N_props = get_d_N_props()
-    return dict(ell=1e3, Nt=61, dt=d_N_props['persistence'])
+def get_d_PDE_props(d_N_props, d_gen_props):
+    return dict(ell=1e3, x_0=3600.,
+                Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
+                x_r=7000., n=701, DL=6e4, gamma_L=0.6)
 
 class Neutrophil(springbok.Cell):
     def __init__(
@@ -187,11 +191,11 @@ def make_3_runs():
     return L_runs
 
 
-def new_make_pde_stepper(ell, d_E_props, d_PDE_props):
-    u_0 = lambda x: np.exp((x - 3600.) / ell)
+def new_make_pde_stepper(d_E_props, d_PDE_props):
+    u_0 = lambda x: np.exp((x - d_PDE_props['x_0']) / d_PDE_props['ell'])
     x_L = 0.
-    x_r = 7e3
-    n = 701
+    x_r = d_PDE_props['x_r']
+    n = d_PDE_props['n']
     F_pde = tiger.PDE(f=None, u_0=u_0,
                       x_L=x_L, x_r=x_r, n=n,
                       u_L=tiger.Dirichlet(u_0(x_L)),
@@ -216,8 +220,8 @@ def new_make_pde_stepper(ell, d_E_props, d_PDE_props):
                 lambda t, x, L_u, dudx, d2udx2: 
             a_exo[1:-1] - exo_pde.gamma * L_u[1][1:-1])
 
-    LTB_pde.DL = 6e4
-    LTB_pde.gamma = 0.6
+    LTB_pde.DL = d_PDE_props['DL']
+    LTB_pde.gamma = d_PDE_props['gamma_L']
     LTB_pde.f_functional = (
             lambda a_F, a_exo, a_L:
                 lambda t, x, L_u, dudx, d2udx2: 
@@ -226,23 +230,25 @@ def new_make_pde_stepper(ell, d_E_props, d_PDE_props):
 
     pde_stepper = tiger.CoupledPDEStepper2(
         L_pde=[F_pde, exo_pde, LTB_pde],
-        dt=d_PDE_props['dt'], Nt=61)
+        dt=d_PDE_props['dt'], Nt=d_PDE_props['Nt'])
     return pde_stepper
 
 def new_setup(
         pde_stepper=None,
-        name='new_setup', d_N_props=None, d_PDE_props=None, d_E_props=None):
+        name='new_setup', d_gen_props=None,
+        d_N_props=None, d_PDE_props=None, d_E_props=None):
     if pde_stepper is None:
-        pde_stepper=new_make_pde_stepper(1e3, d_E_props, d_PDE_props)
-    n_neutrophil = 700
+        pde_stepper=new_make_pde_stepper(d_E_props, d_PDE_props)
     CellType = Neutrophil
+    n_neutrophil = d_N_props.pop('n')
+    x_max = d_N_props.pop('x_max')
     cg = springbok.RectCellGroup(
         CellType,
-        np.array([0., 0.]), np.array([7000., 1000.]),
-        n_neutrophil, n_t=61, **d_N_props)
+        np.array([0., 0.]), np.array([x_max, 1000.]),
+        n_neutrophil, n_t=d_gen_props['Nt'], **d_N_props)
     model = springbok.Springbok(
         L_cell_group=[cg], pde_stepper=pde_stepper,
-        clock_start=1, clock_end=60)
+        clock_start=1, clock_end=d_gen_props['Nt'] - 1)
     model.name = name
     model.set_name = set_name
     return model
@@ -253,12 +259,14 @@ def make_vary_r_L(L_r_L=None, phi_E=0.):
         L_r_L = [0., 1e2, 1e4, 1e6, 1e8]
     L_run = []
     for r_L in L_r_L:
+        d_gen_props = get_d_gen_props()
         d_N_props = get_d_N_props()
         d_E_props = get_d_E_props()
-        d_PDE_props = get_d_PDE_props()
-        d_N_props['sigma_CL0'] = r_L / 100 * (1. - phi_E)
-        d_N_props['sigma_CE0'] = r_L / 100 * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+        d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
+        d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
+        d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
         run = new_setup(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                        d_gen_props=d_gen_props,
                         d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props)
         L_run.append(run)
     return L_run
