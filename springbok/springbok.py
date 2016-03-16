@@ -72,14 +72,31 @@ class Springbok:
             for g in self.L_cell_group:
                 for c in g.L_cell:
                     xy = c.a_xy[self.clock - 1]
-                    L_condition = [(f_c(xy[0]), f_dcdx(xy[0])) for (pde, (f_c, f_dcdx)) in zip(self.pde_stepper.L_pde, L_condition_interp)]
+                    L_condition = []
+                    for (pde, (f_c, f_dcdx)) in zip(
+                            self.pde_stepper.L_pde, L_condition_interp):
+                        if pde.x[1] < xy[0] < pde.x[-2]:
+                            L_condition.append((f_c(xy[0]), f_dcdx(xy[0])))
+                        elif xy[0] <= pde.x[1]:
+                            L_condition.append(
+                                (f_c(pde.x[1]), f_dcdx(pde.x[1])))
+                        else: # xy[1] >= pde.x[-2]
+                            L_condition.append(
+                                (f_c(pde.x[-2]), f_dcdx(pde.x[-2])))
+
                     c.orient(L_condition, clock=self.clock)
                     c.move(self.clock, self.pde_stepper.dt, L_condition)
                     s = c.secrete(L_condition, clock=self.clock)
                     for (j, (a_secrete, pde)) in enumerate(
                             zip(L_a_secrete, self.pde_stepper.L_pde)):
                         i0 = int(xy[0] / pde.dx)
-                        a_secrete[i0] += s[j] / pde.dx
+                        if 0 <= i0 < np.size(a_secrete):
+                            i = i0
+                        elif i0 < 0:
+                            i = 0
+                        else:
+                            i = np.size(a_secrete) - 1
+                        a_secrete[i] += s[j] / pde.dx
                         # a_secrete[i0 - 1] += s[j] / pde.dx / 4.
                         # a_secrete[i0] += s[j] / pde.dx / 2.
                         # a_secrete[i0 + 1] += s[j] / pde.dx / 4.
