@@ -15,16 +15,17 @@ def DFRO(c, dcdx, ell):
 
 def get_d_N_props():
     return dict(
-        length=10., persistence=10., speed=1.,
-        sensitivity_F=200., sensitivity_L=200., F_xt=0.01,
-        sigma_CL0=30., b_L=0.1, sigma_CE0=0., b_E=0.1,
+        length=10., persistence=1., speed=10.,
+        sensitivity_F=200., sensitivity_L=200., F_xt=1e10,
+        sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
         K_d_F=1., K_d_L=1.)
 
 def get_d_E_props():
     return dict(sigma_EL0=1., gamma_E=0.01)
 
 def get_d_PDE_props():
-    return dict(ell=1e3)
+    d_N_props = get_d_N_props()
+    return dict(ell=1e3, Nt=61, dt=d_N_props['persistence'])
 
 class Neutrophil(springbok.Cell):
     def __init__(
@@ -72,12 +73,6 @@ class Neutrophil(springbok.Cell):
             DFRO(L / self.K_d_L, dLdx / self.K_d_L, self.length) *
             np.exp(-F / self.F_xt))
         return kappa
-
-    def move(self, clock, dt, L_condition):
-        super().move(clock, dt, L_condition)
-        if self.a_xy[clock, 0] < 0:
-            self.a_xy[clock, 0] = -self.a_xy[clock, 0]
-            self.a_theta[clock] = np.pi - self.a_theta[clock]
 
     def velocity(self, conditions):
         return self.speed * np.array([np.cos(self.theta), np.sin(self.theta)])
@@ -143,7 +138,7 @@ def make_pde_stepper(ell):
 
 def setup(pde_stepper=make_pde_stepper(1000.), has_BLT=True,
           has_crosstalk=False, name='n_BLT'):
-    n_neutrophil = 100
+    n_neutrophil = 200
     if has_BLT:
         if has_crosstalk:
             CellType = BLTposcrosstalk
@@ -153,7 +148,7 @@ def setup(pde_stepper=make_pde_stepper(1000.), has_BLT=True,
         CellType = BLT0
     cg = springbok.RectCellGroup(
         CellType,
-        np.array([1000., 0.]), np.array([1800., 1000.]),
+        np.array([0., 0.]), np.array([2000., 1000.]),
         n_neutrophil, n_t=61)
     model = springbok.Springbok(
         L_cell_group=[cg], pde_stepper=pde_stepper,
@@ -193,10 +188,10 @@ def make_3_runs():
 
 
 def new_make_pde_stepper(ell, d_E_props, d_PDE_props):
-    u_0 = lambda x: np.exp((x - 2000.) / ell)
+    u_0 = lambda x: np.exp((x - 3600.) / ell)
     x_L = 0.
-    x_r = 3e3
-    n = 301
+    x_r = 7e3
+    n = 701
     F_pde = tiger.PDE(f=None, u_0=u_0,
                       x_L=x_L, x_r=x_r, n=n,
                       u_L=tiger.Dirichlet(u_0(x_L)),
@@ -231,19 +226,19 @@ def new_make_pde_stepper(ell, d_E_props, d_PDE_props):
 
     pde_stepper = tiger.CoupledPDEStepper2(
         L_pde=[F_pde, exo_pde, LTB_pde],
-        dt=10., Nt=61)
+        dt=d_PDE_props['dt'], Nt=61)
     return pde_stepper
 
 def new_setup(
         pde_stepper=None,
         name='new_setup', d_N_props=None, d_PDE_props=None, d_E_props=None):
     if pde_stepper is None:
-        pde_stepper=new_make_pde_stepper(1e2, d_E_props, d_PDE_props)
-    n_neutrophil = 100
+        pde_stepper=new_make_pde_stepper(1e3, d_E_props, d_PDE_props)
+    n_neutrophil = 700
     CellType = Neutrophil
     cg = springbok.RectCellGroup(
         CellType,
-        np.array([1000., 0.]), np.array([1800., 1000.]),
+        np.array([0., 0.]), np.array([7000., 1000.]),
         n_neutrophil, n_t=61, **d_N_props)
     model = springbok.Springbok(
         L_cell_group=[cg], pde_stepper=pde_stepper,
