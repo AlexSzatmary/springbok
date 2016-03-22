@@ -275,26 +275,38 @@ def confection1(model):
                        xlim=(500., 2500.), color_f=platypus.color_f_color,
                        ylabel='Chemotactic index', ylim=(-0.2, 1.))
     fig.add_subplot(6, 1, 4)
+    Nt = model.pde_stepper.Nt
+    n = 11
     fMLP_pde = model.pde_stepper.L_pde[0]
-    fig.multi_plot([fMLP_pde.x], [fMLP_pde.u[0]],
-                   color_f=platypus.color_f_black,
-                   xlabel=r'x, $\mathrm{\mu m}$', ylabel='fMLP',
-                   xlim=(500., 2500.), ylim=(0., 1.))
+    if hasattr(fMLP_pde, 'gamma_F') and fMLP_pde.gamma_F != 0.:
+        fig.multi_plot([fMLP_pde.x] * n,
+#                       fMLP_pde.u[0::(Nt-1) / (n - 1)],
+                       fMLP_pde.u[0:n],
+                       xlabel=r'x, $\mathrm{\mu m}$', ylabel='fMLP',
+                       xlim=(500., 2500.), ylim=(0., 1.),
+                       color_f=lambda i: platypus.greys_color_f(1. - float(i) / n))
+    else:
+        fig.multi_plot([fMLP_pde.x],
+                       fMLP_pde.u[0:1],
+                       xlabel=r'x, $\mathrm{\mu m}$', ylabel='fMLP',
+                       xlim=(500., 2500.), ylim=(0., 1.),
+                       color_f=platypus.color_f_black)
     fig.add_subplot(6, 1, 5)
     if len(model.pde_stepper.L_pde) >= 3:
         exo_pde = model.pde_stepper.L_pde[1]
         fig.multi_plot(
-            [exo_pde.x] * 11, exo_pde.u[::6],
+            [exo_pde.x] * n, exo_pde.u[::(Nt-1)/(n-1)],
             xlabel=r'x, $\mathrm{\mu m}$', ylabel='Exosomes',
-            color_f=platypus.color_f_color)
+            color_f=lambda i: platypus.blues_color_f(float(i) / n))
     fig.add_subplot(6, 1, 6)
     fMLP_pde = model.pde_stepper.L_pde[0]
     if len(model.pde_stepper.L_pde) >= 2:
         LTB_pde = model.pde_stepper.L_pde[2]
         fig.multi_plot(
-            [LTB_pde.x] * 11, LTB_pde.u[::6],
+            [LTB_pde.x] * n, LTB_pde.u[::(Nt-1)/(n-1)],
             xlabel=r'x, $\mathrm{\mu m}$', ylabel=r'$\mathrm{LTB_{4}}$',
-            color_f=platypus.color_f_color)
+            color_f=lambda i: platypus.blues_color_f(float(i) / n))
+
     fig.savefig(model.name + 'confection1', path=path)
     return fig
 

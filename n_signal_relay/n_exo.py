@@ -5,7 +5,7 @@ import sys
 import springbok
 from springbok import tiger
 
-set_name = 'n_exo'
+SET_NAME = 'n_exo'
 
 def FRO(c):
     return c / (1. + c)
@@ -29,7 +29,7 @@ def get_d_E_props():
 def get_d_PDE_props(d_N_props, d_gen_props):
     return dict(ell=1e3, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=7000., n=701, DL=6e4, gamma_L=0.6)
+                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=0.6)
 
 class Neutrophil(springbok.Cell):
     def __init__(
@@ -158,7 +158,7 @@ def setup(pde_stepper=make_pde_stepper(1000.), has_BLT=True,
         L_cell_group=[cg], pde_stepper=pde_stepper,
         clock_start=1, clock_end=60)
     model.name = name
-    model.set_name = set_name
+    model.set_name = SET_NAME
     return model
 
 def make_vary_ell(L_ell=[1e2, 1e3, 1e4], L_has_BLT=[False, True]):
@@ -211,8 +211,9 @@ def new_make_pde_stepper(d_E_props, d_PDE_props):
                         u_L=tiger.Dirichlet(0.), u_r=tiger.Dirichlet(0.),
                         )
 
+    F_pde.gamma_F = d_PDE_props['gamma_F']
     F_pde.f_functional = (lambda *foo: lambda t, x, L_u, dudx, d2udx2: 
-                          np.zeros(np.shape(F_pde.x[1:-1])))
+                          -F_pde.gamma_F * L_u[0][1:-1])
     exo_pde.gamma = d_E_props['gamma_E']
     exo_pde.sigma_EL = d_E_props['sigma_EL0']
     exo_pde.f_functional = (
@@ -236,9 +237,9 @@ def new_make_pde_stepper(d_E_props, d_PDE_props):
 def new_setup(
         pde_stepper=None,
         name='new_setup', d_gen_props=None,
-        d_N_props=None, d_PDE_props=None, d_E_props=None):
+        d_N_props=None, d_PDE_props=None, d_E_props=None, set_name=None):
     if pde_stepper is None:
-        pde_stepper=new_make_pde_stepper(d_E_props, d_PDE_props)
+        pde_stepper = new_make_pde_stepper(d_E_props, d_PDE_props)
     CellType = Neutrophil
     n_neutrophil = d_N_props.pop('n')
     x_max = d_N_props.pop('x_max')
@@ -250,8 +251,23 @@ def new_setup(
         L_cell_group=[cg], pde_stepper=pde_stepper,
         clock_start=1, clock_end=d_gen_props['Nt'] - 1)
     model.name = name
-    model.set_name = set_name
+    if set_name is None:
+        model.set_name = SET_NAME
+    else:
+        model.set_name = set_name
     return model
+
+
+def make_r_L_phi_E(r_L=None, phi_E=0.):
+    d_gen_props = get_d_gen_props()
+    d_N_props = get_d_N_props()
+    d_E_props = get_d_E_props()
+    d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
+    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    run = new_setup(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                    d_gen_props=d_gen_props,
+                    d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props)
 
 
 def make_vary_r_L(L_r_L=None, phi_E=0.):
@@ -259,14 +275,23 @@ def make_vary_r_L(L_r_L=None, phi_E=0.):
         L_r_L = [0., 1e2, 1e4, 1e6, 1e8]
     L_run = []
     for r_L in L_r_L:
-        d_gen_props = get_d_gen_props()
-        d_N_props = get_d_N_props()
-        d_E_props = get_d_E_props()
-        d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
-        d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-        d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-        run = new_setup(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
-                        d_gen_props=d_gen_props,
-                        d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props)
+        run = make_r_L_phi_E(r_L, phi_E)
         L_run.append(run)
     return L_run
+
+def make_decay_F(r_L=None, phi_E=0.):
+    if r_L is None:
+        r_L = 1e6
+    d_gen_props = get_d_gen_props()
+    d_N_props = get_d_N_props()
+    d_E_props = get_d_E_props()
+    d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
+    d_PDE_props['gamma_F'] = 1.
+    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    run = new_setup(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                    d_gen_props=d_gen_props,
+                    d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')
+    return run
+
+#L_r_L = [0., 1e2, 1e4, 1e6, 1e8]
