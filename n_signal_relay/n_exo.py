@@ -19,17 +19,17 @@ def get_d_gen_props():
 def get_d_N_props():
     return dict(
         length=10., persistence=1., speed=10.,
-        sensitivity_F=200., sensitivity_L=200., F_xt=1e10,
+        sensitivity_F=200., sensitivity_L=200., F_xt=1e-2,
         sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
-        K_d_F=1., K_d_L=1., n=700, x_max=7000.)
+        K_d_F=1., K_d_L=1., n=300, x_max=2600., n_t=get_d_gen_props()['Nt'])
 
 def get_d_E_props():
     return dict(sigma_EL0=1., gamma_E=0.01)
 
 def get_d_PDE_props(d_N_props, d_gen_props):
-    return dict(ell=1e3, x_0=3600.,
+    return dict(ell=3e2, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=0.6)
+                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1.5)
 
 class Neutrophil(springbok.Cell):
     def __init__(
@@ -237,18 +237,11 @@ def new_make_pde_stepper(d_E_props, d_PDE_props):
 def new_setup(
         pde_stepper=None,
         name='new_setup', d_gen_props=None,
-        d_N_props=None, d_PDE_props=None, d_E_props=None, set_name=None):
+        L_cell_group=None, d_PDE_props=None, d_E_props=None, set_name=None):
     if pde_stepper is None:
         pde_stepper = new_make_pde_stepper(d_E_props, d_PDE_props)
-    CellType = Neutrophil
-    n_neutrophil = d_N_props.pop('n')
-    x_max = d_N_props.pop('x_max')
-    cg = springbok.RectCellGroup(
-        CellType,
-        np.array([0., 0.]), np.array([x_max, 1000.]),
-        n_neutrophil, n_t=d_gen_props['Nt'], **d_N_props)
     model = springbok.Springbok(
-        L_cell_group=[cg], pde_stepper=pde_stepper,
+        L_cell_group=L_cell_group, pde_stepper=pde_stepper,
         clock_start=1, clock_end=d_gen_props['Nt'] - 1)
     model.name = name
     if set_name is None:
@@ -258,6 +251,17 @@ def new_setup(
     return model
 
 
+def new_setup_random_N(d_N_props=None, **kwargs):
+    CellType = Neutrophil
+    n_neutrophil = d_N_props.pop('n')
+    x_max = d_N_props.pop('x_max')
+    cg = springbok.RectCellGroup(
+        CellType,
+        np.array([0., -x_max / 2.]), np.array([x_max, x_max / 2.]),
+        n_neutrophil, **d_N_props)
+    return new_setup(L_cell_group=[cg], **kwargs)
+
+
 def make_r_L_phi_E(r_L=None, phi_E=0.):
     d_gen_props = get_d_gen_props()
     d_N_props = get_d_N_props()
@@ -265,9 +269,11 @@ def make_r_L_phi_E(r_L=None, phi_E=0.):
     d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
     d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = new_setup(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
-                    d_gen_props=d_gen_props,
-                    d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props)
+    run = new_setup_random_N(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                             d_gen_props=d_gen_props,
+                             d_N_props=d_N_props, d_E_props=d_E_props,
+                             d_PDE_props=d_PDE_props)
+    return run
 
 
 def make_vary_r_L(L_r_L=None, phi_E=0.):
@@ -279,17 +285,18 @@ def make_vary_r_L(L_r_L=None, phi_E=0.):
         L_run.append(run)
     return L_run
 
-def make_decay_F(r_L=None, phi_E=0.):
+def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
     if r_L is None:
         r_L = 1e6
     d_gen_props = get_d_gen_props()
     d_N_props = get_d_N_props()
     d_E_props = get_d_E_props()
     d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
-    d_PDE_props['gamma_F'] = 1.
+    d_N_props['x_max'] = d_PDE_props['x_r']
+    d_PDE_props['gamma_F'] = gamma_F
     d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = new_setup(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
+    run = new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
                     d_gen_props=d_gen_props,
                     d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')
     return run
