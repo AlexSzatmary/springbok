@@ -19,9 +19,9 @@ def get_d_gen_props():
 def get_d_N_props():
     return dict(
         length=10., persistence=1., speed=10.,
-        sensitivity_F=200., sensitivity_L=200., F_xt=1e-2,
+        sensitivity_F=200., sensitivity_L=200., F_xt=1e0,
         sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
-        K_d_F=1., K_d_L=1., n=300, x_max=2600., n_t=get_d_gen_props()['Nt'])
+        K_d_F=1., K_d_L=1., n=300, x_max=7000., n_t=get_d_gen_props()['Nt'])
 
 def get_d_E_props():
     return dict(sigma_EL0=1., gamma_E=0.01)

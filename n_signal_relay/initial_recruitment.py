@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e3, 1e4, 3e4, 1e5]
+L_r_L = [1e6, 1e7, 1e8]
 L_phi_E = [0., 1.]
 
 #Required by Meerkat
@@ -38,6 +38,7 @@ def make_r_L_phi_E(r_L=None, phi_E=0., seed=0):
     d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     n_neutrophil = d_N_props.pop('n')
+    d_N_props['x_max'] = d_PDE_props['x_0']
     x_max = d_N_props.pop('x_max')
     cell_group = springbok.CellGroup([n_exo.Neutrophil(
                 xy_0=np.array([x_max, 500.]), index=(j + seed), **d_N_props)

@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e4]
+L_r_L = [1e8]
 #L_r_L = [0., 1e4, 1e6, 1e8, 1e10, 1e12]
 #L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 L_phi_E = [0.]
@@ -25,7 +25,7 @@ if one_job:
 def job_name(r_L, phi_E, has_BLT):
     return 'n_BLT0-r_L' + str(r_L) + 'phi_E' + str(phi_E) + 'BLT' + ('+' if has_BLT else '-')
 def prototype():
-    return d_runs[(1e4, 0.)]
+    return d_runs[(1e8, 0.)]
 default_suffix = '.run.pkl'
 def run():
     runner.setup(L_job_name)
@@ -57,7 +57,6 @@ def new_setup_random_N_BLT0(d_N_props=None, has_BLT=True, **kwargs):
 def make_r_L_phi_E(r_L=None, phi_E=0., has_BLT=True):
     d_gen_props = n_exo.get_d_gen_props()
     d_N_props = n_exo.get_d_N_props()
-    d_N_props['n'] = 300
     d_E_props = n_exo.get_d_E_props()
     d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
     d_PDE_props['x_0'] = d_N_props['x_max']
