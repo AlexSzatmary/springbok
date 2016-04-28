@@ -244,7 +244,9 @@ def confection0(model):
 def confection1(model):
     fig = platypus.Print(subplot=(3, 1, 1), panesize=(3., 3.))
     path = os.path.join('plots', model.path_name, fig.style)
-    figx = plot_tracks(model, file_name=None, fig=fig)    
+    kwargs = {}
+    kwargs['xlim'] = (0., 3000.)
+    figx = plot_tracks(model, file_name=None, fig=fig, **kwargs)
     if model.set_name == 'n_BLT':
         fig.title('{:.0f}'.format(model.ell) + r' $\mathrm{\mu m}$,' +
                   ' BLT{}'.format('+' if model.has_BLT else '-'))
@@ -455,7 +457,8 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     return fig
 
 
-def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print):
+def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print,
+                        file_name='confection_init_rec'):
     if Style is platypus.Poster:
         kw0 = dict(panesize=(7., 3.5))
     else:
@@ -478,7 +481,8 @@ def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print):
     plot_cos(init_rec.d_runs[(r_L, 1.)], fig=fig, ylim=(-0.1, 1.), **kwargs)
     plot_cos(init_rec.d_runs[(r_L, 1.)], fig=fig, ylim=(-0.1, 1.), n=1, **kwargs)
     fig.set_AB_labels()
-    fig.savefig('confection_init_rec', path=path)
+    if file_name:
+        fig.savefig(file_name, path=path)
     return fig
 
 def confection_decay_F(decay_F, Style=platypus.Print, **kwargs):
@@ -522,14 +526,53 @@ def get_range_time_averaged(model, CI_threshold):
 def get_range(model, CI_threshold, j):
     a_kappa = get_a_kappa(model, j)
     a_cos = flux.mean_velocity_fast(a_kappa)
+    a_continuous = get_continuous(a_cos > CI_threshold)
     return np.sum(a_cos > CI_threshold) * model.pde_stepper.L_pde[0].dx # 1.16 is kappa threshold for CI_threshold = 0.5
 #    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx # 0.4 is kappa threshold for CI_threshold = 0.2
+
+def get_range_continuous(model, CI_threshold, j):
+    a_kappa = get_a_kappa(model, j)
+    a_cos = flux.mean_velocity_fast(a_kappa)
+    a_continuous = get_continuous(a_cos > CI_threshold)
+    return np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx # 1.16 is kappa threshold for CI_threshold = 0.5
+#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx # 0.4 is kappa threshold for CI_threshold = 0.2
+
+def get_continuous(a):
+    L_start = []
+    L_end = []
+    if a[0]:
+        L_start.append(0)
+    for i in range(1, np.size(a) - 1):
+        if a[i] and not a[i - 1]:
+            L_start.append(i)
+        if not a[i] and a[i - 1]:
+            L_end.append(i)
+    if a[-1]:
+        L_end.append(np.size(a))
+    return np.array((L_start, L_end)).T
 
 def get_a_kappa(model, j):
     a_L_condition = np.array([(pde.u[j, 1:-1], springbok.tiger.opdudx(pde.u[j], pde.dx))
                               for pde in model.pde_stepper.L_pde])
     cell = model.L_cell_group[0].L_cell[0]
+#    print(cell.F_xt)
     return np.array([cell.kappa(a_L_condition[:, :, i]) for i in range(np.size(a_L_condition, 2))])
+
+def table_about_range(n_exo):
+    for F_xt in [1e-2, 3e-2, 1e-1, 3e-1, 1e0, 3e0, 1e1]:
+        L_backwards = []
+        L_range = []
+        L_range_continuous = []
+        for run in n_exo.L_runs:
+            run.L_cell_group[0].L_cell[0].F_xt = F_xt
+            a_kappa = get_a_kappa(run, 60)
+            a_cos = flux.mean_velocity_fast(a_kappa)
+            L_backwards.append(np.sum(a_cos < 0.))
+            L_range.append(get_range(run, 0.3, 60))
+            L_range_continuous.append(get_range_continuous(run, 0.3, 60))
+        print(F_xt, max(L_backwards), max(L_range), max(L_range_continuous))
+            #print([run.job_name, F_xt, np.sum(a_cos < 0.), post_processing.get_range(run, 0.5, 60)])
+
 
 def plot_range_vary_phi_E(n_exo, fig=None, Style=platypus.Print,
                           file_name='vary-phi_E'):
@@ -537,11 +580,12 @@ def plot_range_vary_phi_E(n_exo, fig=None, Style=platypus.Print,
         fig = Style(subplot=(1, 2, 1))
     figx = platypus.multi_plot(
         [n_exo.L_phi_E] * len(n_exo.L_r_L),
-        [[get_range(n_exo.d_runs[r_L, phi_E], None, 60)
+        [[get_range_continuous(n_exo.d_runs[r_L, phi_E], 0.5, 60)
           for phi_E in n_exo.L_phi_E] for r_L in n_exo.L_r_L],
         L_legend=[r'$r_L=10^{{{}}}$'.format(int(np.log10(r_L))) if r_L != 0. else r'$r_L=0$' for r_L in n_exo.L_r_L],
         xlabel=r'Fraction of LTB$_4$ secreted via exosomes, $\phi_E$',
         ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 1800.),
         fig=fig)
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
@@ -554,12 +598,13 @@ def plot_range_vary_r_L(n_exo, fig=None, Style=platypus.Print,
         fig = Style(subplot=(1, 2, 1))
     figx = platypus.multi_plot(
         [n_exo.L_r_L] * len(n_exo.L_r_L),
-        [[get_range(n_exo.d_runs[r_L, phi_E], None, 60)
+        [[get_range_continuous(n_exo.d_runs[r_L, phi_E], 0.5, 60)
           for r_L in n_exo.L_r_L] for phi_E in n_exo.L_phi_E],
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
         xlabel='Characteristic LTB$_4$ secretion rate, $r_L$',
         ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 1800.),
         fig=fig)
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
