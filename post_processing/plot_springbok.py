@@ -527,15 +527,16 @@ def get_range(model, CI_threshold, j):
     a_kappa = get_a_kappa(model, j)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
-    return np.sum(a_cos > CI_threshold) * model.pde_stepper.L_pde[0].dx # 1.16 is kappa threshold for CI_threshold = 0.5
-#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx # 0.4 is kappa threshold for CI_threshold = 0.2
+    return np.sum(a_cos > CI_threshold) * model.pde_stepper.L_pde[0].dx
+#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
 
 def get_range_continuous(model, CI_threshold, j):
     a_kappa = get_a_kappa(model, j)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
-    return np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx # 1.16 is kappa threshold for CI_threshold = 0.5
-#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx # 0.4 is kappa threshold for CI_threshold = 0.2
+#    print(np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx)
+    return np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx
+#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
 
 def get_continuous(a):
     L_start = []
@@ -559,7 +560,7 @@ def get_a_kappa(model, j):
     return np.array([cell.kappa(a_L_condition[:, :, i]) for i in range(np.size(a_L_condition, 2))])
 
 def table_about_range(n_exo):
-    for F_xt in [1e-2, 3e-2, 1e-1, 3e-1, 1e0, 3e0, 1e1]:
+    for F_xt in [1e-2, 3e-2, 1e-1, 3e-1, 1e0, 3e0, 1e1, 1e2, 1e3, 1e4, 1e5]:
         L_backwards = []
         L_range = []
         L_range_continuous = []
@@ -568,8 +569,8 @@ def table_about_range(n_exo):
             a_kappa = get_a_kappa(run, 60)
             a_cos = flux.mean_velocity_fast(a_kappa)
             L_backwards.append(np.sum(a_cos < 0.))
-            L_range.append(get_range(run, 0.3, 60))
-            L_range_continuous.append(get_range_continuous(run, 0.3, 60))
+            L_range.append(get_range(run, 0.5, 60))
+            L_range_continuous.append(get_range_continuous(run, 0.5, 60))
         print(F_xt, max(L_backwards), max(L_range), max(L_range_continuous))
             #print([run.job_name, F_xt, np.sum(a_cos < 0.), post_processing.get_range(run, 0.5, 60)])
 
@@ -585,7 +586,7 @@ def plot_range_vary_phi_E(n_exo, fig=None, Style=platypus.Print,
         L_legend=[r'$r_L=10^{{{}}}$'.format(int(np.log10(r_L))) if r_L != 0. else r'$r_L=0$' for r_L in n_exo.L_r_L],
         xlabel=r'Fraction of LTB$_4$ secreted via exosomes, $\phi_E$',
         ylabel='Range for directed migration, $\mu m$',
-        ylim=(0., 1800.),
+        ylim=(0., 2000.),
         fig=fig)
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
@@ -604,7 +605,7 @@ def plot_range_vary_r_L(n_exo, fig=None, Style=platypus.Print,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
         xlabel='Characteristic LTB$_4$ secretion rate, $r_L$',
         ylabel='Range for directed migration, $\mu m$',
-        ylim=(0., 1800.),
+        ylim=(0., 2000.),
         fig=fig)
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
