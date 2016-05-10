@@ -29,7 +29,7 @@ def get_d_E_props():
 def get_d_PDE_props(d_N_props, d_gen_props):
     return dict(ell=3e2, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1.5)
+                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1/1.5)
 
 class Neutrophil(springbok.Cell):
     def __init__(
