@@ -2,7 +2,7 @@ import functools
 import matplotlib
 import numpy as np
 import os
-import platypus
+import post_processing.platypus
 import scipy
 from scipy.interpolate import interp1d
 from scipy.stats import vonmises
