@@ -316,6 +316,38 @@ def confection1(model):
     return fig
 
 
+def confection2(module, run, Style=platypus.Print, title=True, **kwargs):
+    if Style is platypus.Poster:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3., 3.))
+    fig = Style(subplot=(3, 1, 1), **kw0)
+    if title is True:
+        title = run.job_name
+    if title:
+        fig.title(title)
+            
+    path = os.path.join('plots', module.set_name, fig.style, 'confection')
+    kwargs['xlim'] = (0000., 3000.)
+    figx = plot_tracks(run, file_name=None, fig=fig, **kwargs)
+    fig.add_subplot(6, 1, 3)
+    ax = fig.fig.gca()
+#    ax.yaxis.get_major_formatter().set_scientific(True)
+#    ax.yaxis.get_major_formatter().set_powerlimits((0, 1))
+    plot_fMLP(run, fig=fig, ylim=(0., 0.011), **kwargs)
+    fig.fig.canvas.draw()
+    fig.add_subplot(6, 1, 4)
+    plot_exo(run, fig=fig, **kwargs)
+    fig.add_subplot(6, 1, 5)
+    plot_LTB(run, fig=fig, ylog=False, ylim=(0., 1e0), **kwargs)
+    fig.add_subplot(6, 1, 6)
+    plot_cos(run, fig=fig, ylim=(-0.1, 1.), **kwargs)
+    fig.set_AB_labels()
+    fig.savefig('confection2-' + run.name, path=path)
+    return fig
+
+
+
 def plot_CI_x(model, fig=None):
     fig.multi_plot([[cell.a_xy[0, 0]
                     for cell in model.L_cell_group[0].L_cell]],
@@ -626,3 +658,79 @@ def plot_range(n_exo, Style=platypus.Print, file_name='range'):
         path = os.path.join('plots', n_exo.set_name, fig.style)    
         fig.savefig(file_name, path=path)
     return fig
+
+def plot_range_vary_D_L(vary_D_L, fig=None, Style=platypus.Print,
+                          file_name='vary-D_L', r_L=1e6):
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [vary_D_L.L_D_L] * len(vary_D_L.L_r_L),
+        [[get_range_continuous(vary_D_L.d_runs[D_L, r_L, phi_E], 0.5, 60)
+          for D_L in vary_D_L.L_D_L] for phi_E in vary_D_L.L_phi_E],
+        xlog=True,
+        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_D_L.L_phi_E],
+        xlabel=r'LTB$_4$ diffusion coefficient, $D_L$, $\mathrm{\mu m}^2/s$',
+        ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 2000.),
+        fig=fig)
+    if file_name:
+        path = os.path.join('plots', vary_D_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+def plot_range_vary_gamma_L(vary_gamma_L, fig=None, Style=platypus.Print,
+                          file_name='vary-ell_L-gamma_L', r_L=1e6):
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [vary_gamma_L.L_gamma_L] * len(vary_gamma_L.L_r_L),
+        [[get_range_continuous(vary_gamma_L.d_runs[gamma_L, r_L, phi_E], 0.5, 60)
+          for gamma_L in vary_gamma_L.L_gamma_L] for phi_E in vary_gamma_L.L_phi_E],
+        xlog=True,
+        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
+        xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/s',
+        ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 2000.),
+        fig=fig)
+    if file_name:
+        path = os.path.join('plots', vary_gamma_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+def plot_range_vary_ell_L_D_L(vary_D_L, fig=None, Style=platypus.Print,
+                          file_name='vary-D_L', r_L=1e6):
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [vary_D_L.L_ell_L] * len(vary_D_L.L_r_L),
+        [[get_range_continuous(vary_D_L.d_runs[D_L, r_L, phi_E], 0.5, 60)
+          for D_L in vary_D_L.L_D_L] for phi_E in vary_D_L.L_phi_E],
+        xlog=True,
+        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_D_L.L_phi_E],
+        xlabel=r'LTB$_4$ characteristic length, $\ell_L$, $\mathrm{\mu m}$',
+        ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 2000.),
+        fig=fig)
+    if file_name:
+        path = os.path.join('plots', vary_D_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+def plot_range_vary_ell_L_gamma_L(vary_gamma_L, fig=None, Style=platypus.Print,
+                          file_name='vary-ell_L-gamma_L', r_L=1e6):
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [vary_gamma_L.L_ell_L] * len(vary_gamma_L.L_r_L),
+        [[get_range_continuous(vary_gamma_L.d_runs[gamma_L, r_L, phi_E], 0.5, 60)
+          for gamma_L in vary_gamma_L.L_gamma_L] for phi_E in vary_gamma_L.L_phi_E],
+        xlog=True,
+        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
+        xlabel=r'LTB$_4$ characteristic length, $\ell_L$, $\mathrm{\mu m}$',
+        ylabel='Range for directed migration, $\mu m$',
+        ylim=(0., 2000.),
+        fig=fig)
+    if file_name:
+        path = os.path.join('plots', vary_gamma_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
