@@ -46,6 +46,11 @@ def plot_tracks(model, file_name=True, path=None, Style=None, fig=None,
             L_marker=['o'] * len(model.L_cell_group[1].L_cell),
             markerfacecolor='none', markersize=(4e0),
             file_name=None)
+    ax = fig.fig.gca()
+    ax.spines['top'].set_visible(True)
+    ax.spines['right'].set_visible(True)
+    ax.spines['top']._linewidth = 0.5
+    ax.spines['right']._linewidth = 0.5
     if file_name:
         fig.savefig(file_name, path=path)
     return fig
@@ -517,39 +522,42 @@ def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print,
         fig.savefig(file_name, path=path)
     return fig
 
-def confection_decay_F(decay_F, Style=platypus.Print, **kwargs):
+def confection_decay_F(decay_F, Style=platypus.Print,
+                       file_name='confection_decay_F', r_L=1e6,
+                       **kwargs):
     if Style is platypus.Poster:
         kw0 = {}
     else:
         kw0 = dict(panesize=(3., 3.))
     fig = Style(subplot=(3, 2, 1), **kw0)
     path = os.path.join('plots', decay_F.set_name, fig.style)
-    kwargs['xlim'] = (0000., 3000.)
-    figx = plot_tracks(decay_F.L_runs[0], file_name=None, fig=fig, **kwargs)
+    kwargs['xlim'] = (0000., 7000.)
+    figx = plot_tracks(decay_F.d_runs[r_L, 0.], file_name=None, fig=fig, **kwargs)
     fig.add_subplot(3, 2, 2)
-    figx = plot_tracks(decay_F.L_runs[1], file_name=None, fig=fig, **kwargs)
+    figx = plot_tracks(decay_F.d_runs[r_L, 1.], file_name=None, fig=fig, **kwargs)
     fig.add_subplot(6, 2, 5)
     ax = fig.fig.gca()
 #    ax.yaxis.get_major_formatter().set_scientific(True)
 #    ax.yaxis.get_major_formatter().set_powerlimits((0, 1))
-    plot_fMLP(decay_F.L_runs[0], fig=fig, ylim=(0., 0.011), **kwargs)
+    plot_fMLP(decay_F.d_runs[r_L, 0.], fig=fig, ylim=(0., 1.), **kwargs)
     fig.fig.canvas.draw()
     fig.add_subplot(6, 2, 6)
-    plot_fMLP(decay_F.L_runs[1], fig=fig, ylim=(0., 0.011), **kwargs)
+    plot_fMLP(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(0., 1.), **kwargs)
     # fig.add_subplot(6, 2, 7)
-    # plot_exo(decay_F.L_runs[0], fig=fig, **kwargs)
+    # plot_exo(decay_F.d_runs[r_L, 0.], fig=fig, **kwargs)
     fig.add_subplot(6, 2, 8)
-    plot_exo(decay_F.L_runs[1], fig=fig, ylim=(0., 1.), **kwargs)
+    plot_exo(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(0., 1.), **kwargs)
     fig.add_subplot(6, 2, 9)
-    plot_LTB(decay_F.L_runs[0], fig=fig, ylog=False, ylim=(0., 1e0), **kwargs)
+    plot_LTB(decay_F.d_runs[r_L, 0.], fig=fig, ylog=False, ylim=(0., 1e0), **kwargs)
     fig.add_subplot(6, 2, 10)
-    plot_LTB(decay_F.L_runs[1], fig=fig, ylog=False, ylim=(0., 1e0), **kwargs)
+    plot_LTB(decay_F.d_runs[r_L, 1.], fig=fig, ylog=False, ylim=(0., 1e0), **kwargs)
     fig.add_subplot(6, 2, 11)
-    plot_cos(decay_F.L_runs[0], fig=fig, ylim=(-0.1, 1.), **kwargs)
+    plot_cos(decay_F.d_runs[r_L, 0.], fig=fig, ylim=(-0.1, 1.), **kwargs)
     fig.add_subplot(6, 2, 12)
-    plot_cos(decay_F.L_runs[1], fig=fig, ylim=(-0.1, 1.), **kwargs)
+    plot_cos(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(-0.1, 1.), **kwargs)
     fig.set_AB_labels()
-    fig.savefig('confection_decay_F', path=path)
+    if file_name:
+        fig.savefig(file_name, path=path)
     return fig
 
 def get_range_time_averaged(model, CI_threshold):
@@ -575,7 +583,7 @@ def get_continuous(a):
     L_end = []
     if a[0]:
         L_start.append(0)
-    for i in range(1, np.size(a) - 1):
+    for i in range(1, np.size(a)):
         if a[i] and not a[i - 1]:
             L_start.append(i)
         if not a[i] and a[i - 1]:
