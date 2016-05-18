@@ -181,7 +181,7 @@ def mean_velocity(kappa, my_vonmisespdf=None):
 
 _a_kappa = np.logspace(-4, 2)
 _interp_mean_v = np.array(list(map(lambda kappa: mean_velocity(kappa, my_vonmisespdf=vonmisespdf), _a_kappa)))
-mean_velocity_fast = interp1d(np.hstack(([-10000.], -_a_kappa[::-1], [0.], _a_kappa, [10000.])), np.hstack(([-1.], -_interp_mean_v[::-1], [0.], _interp_mean_v, [1.])))
+mean_velocity_fast = interp1d(np.hstack(([-1e8, -10000.], -_a_kappa[::-1], [0.], _a_kappa, [10000., 1e8])), np.hstack(([-1., -1.], -_interp_mean_v[::-1], [0.], _interp_mean_v, [1., 1.])))
 
 
 def flux(kappa, my_vonmisespdf=None):
