@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e6]
+L_r_L = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
 L_phi_E = [0., 1.]
 
 #Required by Meerkat
@@ -95,7 +95,7 @@ def new_setup_random_N(d_N_props=None, **kwargs):
     return new_setup(L_cell_group=[cg], d_N_props=d_N_props, **kwargs)
 
 
-def make_decay_F(r_L=None, phi_E=0., gamma_F=0.):
+def make_decay_F_prerun(r_L=None, phi_E=0., gamma_F=0.):
     if r_L is None:
         r_L = 1e6
     d_gen_props = n_exo.get_d_gen_props()
@@ -112,9 +112,31 @@ def make_decay_F(r_L=None, phi_E=0., gamma_F=0.):
     return run
 
 
+def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
+    if r_L is None:
+        r_L = 1e6
+    d_gen_props = n_exo.get_d_gen_props()
+    d_N_props = n_exo.get_d_N_props()
+    d_E_props = n_exo.get_d_E_props()
+    d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
+    d_N_props['x_max'] = d_PDE_props['x_r']
+    d_PDE_props['gamma_F'] = gamma_F
+    d_PDE_props['ell'] = 4e2
+    d_PDE_props['x_0'] = 3500.
+    d_PDE_props['a'] = 500.
+    d_PDE_props['ca'] = 1.
+    d_PDE_props['u_0'] = n_exo.exp_bell_u_0
+    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    run = n_exo.new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                    d_gen_props=d_gen_props,
+                    d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')
+    return run
+
+
 def setup(r_L, phi_E):
     jn = job_name(r_L, phi_E)
-    run = make_decay_F(r_L=r_L, phi_E=phi_E, gamma_F=0.)
+    run = make_decay_F(r_L=r_L, phi_E=phi_E, gamma_F=0.1)
     run.job_name = jn
     with open(jn + '.pkl', 'wb') as hout:
         cloudpickle.dump(run, hout)

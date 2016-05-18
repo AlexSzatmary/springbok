@@ -29,7 +29,8 @@ def get_d_E_props():
 def get_d_PDE_props(d_N_props, d_gen_props):
     return dict(ell=4e2, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1/1.5)
+                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1/1.5,
+                u_0=exp_u_0)
 
 class Neutrophil(springbok.Cell):
     def __init__(
@@ -98,8 +99,37 @@ class BLT0(Neutrophil):
         super().orient([L_condition[0], (0., 0.), (0., 0.)])
 
 
+def exp_u_0(d_PDE_props):
+    return lambda x: np.exp((x - d_PDE_props['x_0']) / d_PDE_props['ell']) 
+
+
+def exp_bell_u_0(d_PDE_props):
+    ell = d_PDE_props['ell']
+    x_0 = d_PDE_props['x_0']
+    a = d_PDE_props['a']
+    ca = d_PDE_props['ca']
+    def f(x):
+        if type(x) is np.ndarray:
+            a_x = x
+        else:
+            a_x = [x]
+        L_f = []
+        for xi in a_x:
+            if xi - x_0 < -a:
+                L_f.append(ca * np.exp((xi - (x_0 - a)) / ell))
+            elif -a <= xi - x_0 < a:
+                L_f.append(ca * (2. - (np.exp((xi - (x_0 - a)) / ell) + np.exp(-(xi - (x_0 + a)) / ell)) /
+                             (1. + np.exp(2. * a / ell))))
+            else:
+                L_f.append(ca * np.exp(-(xi - (x_0 + a)) / ell))
+        if type(x) is np.ndarray:
+            return np.array(L_f)
+        else:
+            return L_f[0]
+    return f
+
 def new_make_pde_stepper(d_E_props, d_PDE_props):
-    u_0 = lambda x: np.exp((x - d_PDE_props['x_0']) / d_PDE_props['ell'])
+    u_0 = d_PDE_props['u_0'](d_PDE_props)
     x_L = 0.
     x_r = d_PDE_props['x_r']
     n = d_PDE_props['n']
