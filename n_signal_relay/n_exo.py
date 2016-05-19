@@ -32,6 +32,7 @@ def get_d_PDE_props(d_N_props, d_gen_props):
                 x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1/1.5,
                 u_0=exp_u_0)
 
+
 class Neutrophil(springbok.Cell):
     def __init__(
             self, length=None,
@@ -145,7 +146,7 @@ def new_make_pde_stepper(d_E_props, d_PDE_props):
     LTB_pde = tiger.PDE(f=None,
                         u_0=0.,
                         x_L=x_L, x_r=x_r, n=n,
-                        u_L=tiger.Dirichlet(0.), u_r=tiger.Dirichlet(0.),
+                        u_L=tiger.VonNeumann(0.), u_r=tiger.VonNeumann(0.),
                         )
 
     F_pde.gamma_F = d_PDE_props['gamma_F']
@@ -160,11 +161,20 @@ def new_make_pde_stepper(d_E_props, d_PDE_props):
 
     LTB_pde.DL = d_PDE_props['DL']
     LTB_pde.gamma = d_PDE_props['gamma_L']
-    LTB_pde.f_functional = (
-            lambda a_F, a_exo, a_L:
-                lambda t, x, L_u, dudx, d2udx2: 
-            LTB_pde.DL * d2udx2 + a_L[1:-1] - LTB_pde.gamma * L_u[2][1:-1] +
-            exo_pde.sigma_EL * L_u[1][1:-1])
+    def outer(a_F, a_exo, a_L):
+        def inner(t, x, L_u, dudx, d2udx2):
+            E = L_u[1][1:-1]
+            L = L_u[2][1:-1]
+            return (LTB_pde.DL * d2udx2 + a_L[1:-1] - LTB_pde.gamma * L +
+                    exo_pde.sigma_EL * E)
+        return inner
+
+    LTB_pde.f_functional = outer
+    def bc_f(t, x, L_u, dudx, d2udx2):
+        return (LTB_pde.DL * d2udx2 - LTB_pde.gamma * L_u[2] +
+                exo_pde.sigma_EL * L_u[1])
+    LTB_pde.u_L.f = bc_f
+    LTB_pde.u_r.f = bc_f
 
     pde_stepper = tiger.CoupledPDEStepper2(
         L_pde=[F_pde, exo_pde, LTB_pde],
