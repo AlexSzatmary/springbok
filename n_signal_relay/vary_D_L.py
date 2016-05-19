@@ -9,8 +9,8 @@ import runner
 
 
 #L_r_L = [1e6]
-L_D_L = [1e2, 1e3, 1e4, 6e4, 1e5]
-L_r_L = [1e5, 1e6, 1e7]
+L_D_L = [1e2, 2e2, 5e2, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 6e4, 1e5, 2e5, 5e5]
+L_r_L = [1e4, 1e5, 1e6, 1e7]
 L_phi_E = [0., 0.5, 1.]
 
 #Required by Meerkat
