@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e8]
+L_r_L = [1e4, 1e5, 1e6]
 #L_r_L = [0., 1e4, 1e6, 1e8, 1e10, 1e12]
 #L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 L_phi_E = [0.]
@@ -59,7 +59,6 @@ def make_r_L_phi_E(r_L=None, phi_E=0., has_BLT=True):
     d_N_props = n_exo.get_d_N_props()
     d_E_props = n_exo.get_d_E_props()
     d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
-    d_PDE_props['x_0'] = d_N_props['x_max']
     d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = new_setup_random_N_BLT0(has_BLT=has_BLT,
