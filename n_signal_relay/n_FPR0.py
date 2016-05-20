@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e4]
+L_r_L = [1e0]
 #L_r_L = [0., 1e4, 1e6, 1e8, 1e10, 1e12]
 #L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 L_phi_E = [0.]
@@ -62,13 +62,13 @@ def new_setup_random_N_FPR0(d_N_props=None, case=None, **kwargs):
 def make_r_L_phi_E(r_L=None, case=None, phi_E=0.):
     d_gen_props = n_exo.get_d_gen_props()
     d_N_props = n_exo.get_d_N_props()
-    d_N_props['n'] = 100
-    d_N_props['x_max'] = 4000
+#    d_N_props['n'] = 100
+#    d_N_props['x_max'] = 4000
     d_E_props = n_exo.get_d_E_props()
     d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
 #    d_PDE_props['x_0'] = d_N_props['x_max']
-    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = new_setup_random_N_FPR0(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
                                   case=case,
                                   d_gen_props=d_gen_props,

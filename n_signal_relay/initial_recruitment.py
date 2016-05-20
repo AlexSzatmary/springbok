@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e6, 1e7, 1e8]
+L_r_L = [1e0, 1e1, 1e2]#, 1e3, 1e4, 1e5]
 L_phi_E = [0., 1.]
 
 #Required by Meerkat
@@ -35,8 +35,8 @@ def make_r_L_phi_E(r_L=None, phi_E=0., seed=0):
     d_N_props['n'] = 1
     d_E_props = n_exo.get_d_E_props()
     d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
-    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     n_neutrophil = d_N_props.pop('n')
     d_N_props['x_max'] = d_PDE_props['x_0']
     x_max = d_N_props.pop('x_max')

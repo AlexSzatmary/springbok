@@ -10,7 +10,7 @@ import runner
 
 #L_r_L = [1e6]
 L_D_L = [1e2, 2e2, 5e2, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 6e4, 1e5, 2e5, 5e5]
-L_r_L = [1e4, 1e5, 1e6, 1e7]
+L_r_L = [1e0, 1e1, 1e2, 1e3]
 L_phi_E = [0., 0.5, 1.]
 
 #Required by Meerkat
@@ -37,8 +37,8 @@ def make_vary_D_L(D_L=None, r_L=None, phi_E=0., name=None):
     d_E_props = n_exo.get_d_E_props()
     d_PDE_props = n_exo.get_d_PDE_props(d_N_props, d_gen_props)
     d_PDE_props['DL'] = D_L
-    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = n_exo.new_setup_random_N(
         name=name,
         d_gen_props=d_gen_props,

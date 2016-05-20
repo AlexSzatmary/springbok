@@ -21,7 +21,7 @@ def get_d_N_props():
         length=10., persistence=1., speed=10.,
         sensitivity_F=200., sensitivity_L=200., F_xt=1e0,
         sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
-        K_d_F=1., K_d_L=1., n=300, x_max=7000., n_t=get_d_gen_props()['Nt'])
+        K_d_F=1., K_d_L=1., n=500, x_max=1e4, n_t=get_d_gen_props()['Nt'])
 
 def get_d_E_props():
     return dict(sigma_EL0=1., gamma_E=0.01)
@@ -29,7 +29,7 @@ def get_d_E_props():
 def get_d_PDE_props(d_N_props, d_gen_props):
     return dict(ell=4e2, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=7000., n=701, gamma_F=0., DL=6e4, gamma_L=1/1.5,
+                x_r=1e4, n=1001, gamma_F=0., DL=6e4, gamma_L=1/1.5,
                 u_0=exp_u_0)
 
 
@@ -214,8 +214,8 @@ def make_r_L_phi_E(r_L=None, phi_E=0.):
     d_N_props = get_d_N_props()
     d_E_props = get_d_E_props()
     d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
-    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = new_setup_random_N(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
                              d_gen_props=d_gen_props,
                              d_N_props=d_N_props, d_E_props=d_E_props,
@@ -241,8 +241,8 @@ def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
     d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
     d_N_props['x_max'] = d_PDE_props['x_r']
     d_PDE_props['gamma_F'] = gamma_F
-    d_N_props['sigma_CL0'] = r_L / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
+    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
+    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
                     d_gen_props=d_gen_props,
                     d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')

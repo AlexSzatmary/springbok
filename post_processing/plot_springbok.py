@@ -567,7 +567,7 @@ def confection_n_FPR0_3(
 def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
                       Style=platypus.Print,
                       xlim=(1e3, 4e3),
-                      r_L=1e5,
+                      r_L=1e2,
                       **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
@@ -627,7 +627,7 @@ def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print,
     return fig
 
 def confection_decay_F(decay_F, Style=platypus.Print,
-                       file_name='confection_decay_F', r_L=1e6,
+                       file_name='confection_decay_F', r_L=1e2,
                        xlim = (0., 3e3),
                        **kwargs):
     if Style is platypus.Poster:
