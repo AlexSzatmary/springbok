@@ -567,7 +567,7 @@ def confection_n_FPR0_3(
 def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
                       Style=platypus.Print,
                       xlim=(1e3, 4e3),
-                      r_L=1e2,
+                      r_L=1e1,
                       **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
@@ -596,7 +596,7 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     return fig
 
 
-def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print,
+def confection_init_rec(init_rec, r_L=1e1, Style=platypus.Print,
                         file_name='confection_init_rec'):
     if Style is platypus.Poster:
         kw0 = dict(panesize=(7., 3.5))
@@ -628,7 +628,7 @@ def confection_init_rec(init_rec, r_L=1e5, Style=platypus.Print,
 
 def confection_decay_F(decay_F, Style=platypus.Print,
                        file_name='confection_decay_F', r_L=1e2,
-                       xlim = (0., 3e3),
+                       xlim = (0., 4e3),
                        **kwargs):
     if Style is platypus.Poster:
         kw0 = {}
@@ -729,7 +729,8 @@ def plot_range_vary_phi_E(n_exo, fig=None, Style=platypus.Print,
         [n_exo.L_phi_E] * len(L_r_L),
         [[get_range_continuous(n_exo.d_runs[r_L, phi_E], 0.5, 60)
           for phi_E in n_exo.L_phi_E] for r_L in L_r_L],
-        L_legend=[r'$r_L=10^{{{}}}$'.format(int(np.log10(r_L))) if r_L != 0. else r'$r_L=0$' for r_L in L_r_L],
+        #        L_legend=[r'$r_L=10^{{{}}}$'.format(int(np.log10(r_L))) if r_L != 0. else r'$r_L=0$' for r_L in L_r_L],
+        L_legend=[r'$r_L={:.2e}'.format(r_L) + 'K_d/\mathrm{min}$' if r_L != 0. else r'$r_L=0$' for r_L in L_r_L],
         xlabel=r'Fraction of LTB$_4$ secreted via exosomes, $\phi_E$',
         ylabel='Range for directed migration, $\mu m$',
         ylim=(0., 2000.),
@@ -749,7 +750,7 @@ def plot_range_vary_r_L(n_exo, fig=None, Style=platypus.Print,
           for r_L in n_exo.L_r_L] for phi_E in n_exo.L_phi_E],
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
-        xlabel='Characteristic LTB$_4$ secretion rate, $r_L$',
+        xlabel='Characteristic LTB$_4$ secretion rate, $r_L$, $K_d/\mathrm{min}$',
         ylabel='Range for directed migration, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
@@ -802,7 +803,7 @@ def plot_range_vary_gamma_L(vary_gamma_L, fig=None, Style=platypus.Print,
           for gamma_L in vary_gamma_L.L_gamma_L] for phi_E in vary_gamma_L.L_phi_E],
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
-        xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/s',
+        xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
         ylabel='Range for directed migration, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
