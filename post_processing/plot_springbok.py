@@ -774,6 +774,10 @@ def plot_range(n_exo, Style=platypus.Print, file_name='range'):
         fig.savefig(file_name, path=path)
     return fig
 
+def rr_vs_t(n_exo):
+    fig = platypus.multi_plot([np.arange(1, 61)]*5, [np.array([get_range_continuous(run, 0.5, i) for i in range(1, 61)]) for run in [n_exo.d_runs[1.5, phi_E] for phi_E in n_exo.L_phi_E]], file_name='rr-vs-t-r_L1.5', path='plots/n_exo-2016-05-21/print/', xlabel='Time, min', ylabel=r'Recruitment range, $\mu m$')
+    return fig
+
 def plot_range_vary_D_L(vary_D_L, fig=None, Style=platypus.Print,
                           file_name='vary-D_L', r_L=1e6):
     if fig is None:
