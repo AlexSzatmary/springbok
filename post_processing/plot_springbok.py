@@ -358,7 +358,7 @@ def confection2(module, run, Style=platypus.Print, title=True, **kwargs):
 
 
 
-def plot_CI_x(model, fig=None):
+def plot_CI_x(model, fig=None, **kwargs):
     fig.multi_plot([[cell.a_xy[0, 0]
                     for cell in model.L_cell_group[0].L_cell]],
                    # [cell.a_xy[0, 0]
@@ -366,7 +366,7 @@ def plot_CI_x(model, fig=None):
                    [[CI(cell)
                     for cell in model.L_cell_group[0].L_cell]], L_marker=['.'],
                    L_linestyle=['None'], xlabel=r'x, $\mathrm{\mu m}$',
-                   ylabel='Chemotactic index', ylim=(-0.2, 1.))
+                   ylabel='Chemotactic index', ylim=(-0.2, 1.), **kwargs)
 
 
 def plot_concentration(model, pde, fig=None, n=11, **kwargs):
@@ -650,7 +650,9 @@ def confection_decay_F(decay_F, Style=platypus.Print,
     fig.fig.canvas.draw()
     fig.add_subplot(6, 2, 6)
     plot_fMLP(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(0., 1.), **kwargs)
-    # fig.add_subplot(6, 2, 7)
+    fig.add_subplot(6, 2, 7)
+    plot_CI_x(decay_F.d_runs[r_L, 0.], fig=fig, xlim=xlim)
+    plot_CI_x(decay_F.d_runs[r_L, 1.], fig=fig, color_f=lambda x: platypus.color_f_color(x + 1), xlim=xlim)
     # plot_exo(decay_F.d_runs[r_L, 0.], fig=fig, **kwargs)
     fig.add_subplot(6, 2, 8)
     plot_exo(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(0., 1.), **kwargs)
