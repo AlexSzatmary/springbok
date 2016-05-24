@@ -235,27 +235,3 @@ def make_vary_r_L(L_r_L=None, phi_E=0.):
         run = make_r_L_phi_E(r_L, phi_E)
         L_run.append(run)
     return L_run
-
-def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
-    if r_L is None:
-        r_L = 1e6
-    d_gen_props = get_d_gen_props()
-    d_N_props = get_d_N_props()
-    d_E_props = get_d_E_props()
-    d_PDE_props = get_d_PDE_props(d_N_props, d_gen_props)
-    d_N_props['x_max'] = d_PDE_props['x_r']
-    d_PDE_props['gamma_F'] = gamma_F
-    d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
-    d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = new_setup_random_N(
-        name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
-        d_gen_props=d_gen_props,
-        d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props,
-        set_name='n_exo_decay')
-    run.d_gen_props = d_gen_props
-    run.d_N_props = d_N_props
-    run.d_E_props = d_E_props
-    run.d_PDE_props = d_PDE_props
-    return run
-
-#L_r_L = [0., 1e2, 1e4, 1e6, 1e8]
