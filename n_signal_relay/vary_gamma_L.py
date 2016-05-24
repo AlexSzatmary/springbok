@@ -24,7 +24,7 @@ if one_job:
     L_variables = [[L[0]] for L in L_variables]
 
 def job_name(gamma_L, r_L, phi_E):
-    return 'vary_gamma_L' + str(gamma_L) + '_F-r_L' + str(r_L) + 'phi_E' + str(phi_E)
+    return 'vary_gamma_L' + str(gamma_L) + '-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E)
 def prototype():
     return d_runs[(6e4, 1e6, 0.)]
 default_suffix = '.run.pkl'

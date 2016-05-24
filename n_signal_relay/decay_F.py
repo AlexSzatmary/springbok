@@ -21,7 +21,7 @@ if one_job:
     L_variables = [[L[0]] for L in L_variables]
 
 def job_name(r_L, phi_E):
-    return 'decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E)
+    return 'decay_F-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E)
 def prototype():
     return d_runs[(1e6, 0.)]
 default_suffix = '.run.pkl'
@@ -106,7 +106,7 @@ def make_decay_F_prerun(r_L=None, phi_E=0., gamma_F=0.):
     d_PDE_props['gamma_F'] = gamma_F
     d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
+    run = new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E),
                     d_gen_props=d_gen_props,
                     d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')
     return run
@@ -128,7 +128,7 @@ def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
     d_PDE_props['u_0'] = n_exo.exp_bell_u_0
     d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = n_exo.new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E' + str(phi_E),
+    run = n_exo.new_setup_random_N(name='decay_F-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E),
                     d_gen_props=d_gen_props,
                     d_N_props=d_N_props, d_E_props=d_E_props, d_PDE_props=d_PDE_props, set_name='n_exo_decay')
     return run

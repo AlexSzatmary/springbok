@@ -23,7 +23,7 @@ if one_job:
     L_variables = [[L[0]] for L in L_variables]
 
 def job_name(r_L, phi_E, has_BLT):
-    return 'n_BLT0-r_L' + str(r_L) + 'phi_E' + str(phi_E) + 'BLT' + ('+' if has_BLT else '-')
+    return 'n_BLT0-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E) + 'BLT' + ('+' if has_BLT else '-')
 def prototype():
     return d_runs[(1e8, 0.)]
 default_suffix = '.run.pkl'
@@ -62,7 +62,7 @@ def make_r_L_phi_E(r_L=None, phi_E=0., has_BLT=True):
     d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
     run = new_setup_random_N_BLT0(has_BLT=has_BLT,
-                                  name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
+                                  name='r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E),
                                   d_gen_props=d_gen_props,
                                   d_N_props=d_N_props, d_E_props=d_E_props,
                                   d_PDE_props=d_PDE_props, set_name='n_BLT0')

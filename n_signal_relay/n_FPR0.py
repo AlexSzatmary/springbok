@@ -23,7 +23,7 @@ if one_job:
     L_variables = [[L[0]] for L in L_variables]
 
 def job_name(r_L, phi_E, case):
-    return 'n_FPR0-r_L' + str(r_L) + 'phi_E' + str(phi_E) + '-' + case
+    return 'n_FPR0-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E) + '-' + case
 def prototype():
     return d_runs[(1e4, 0., 'Mixed')]
 default_suffix = '.run.pkl'
@@ -69,7 +69,7 @@ def make_r_L_phi_E(r_L=None, case=None, phi_E=0.):
 #    d_PDE_props['x_0'] = d_N_props['x_max']
     d_N_props['sigma_CL0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * (1. - phi_E)
     d_N_props['sigma_CE0'] = r_L * d_PDE_props['x_r'] / d_N_props['n'] * d_E_props['gamma_E'] / d_E_props['sigma_EL0'] * phi_E
-    run = new_setup_random_N_FPR0(name='r_L' + str(r_L) + 'phi_E' + str(phi_E),
+    run = new_setup_random_N_FPR0(name='r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E),
                                   case=case,
                                   d_gen_props=d_gen_props,
                                   d_N_props=d_N_props, d_E_props=d_E_props,

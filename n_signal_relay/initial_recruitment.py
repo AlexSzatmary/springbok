@@ -20,7 +20,7 @@ if one_job:
     L_variables = [[L[0]] for L in L_variables]
 
 def job_name(r_L, phi_E):
-    return 'init_rec-r_L' + str(r_L) + 'phi_E' + str(phi_E)
+    return 'init_rec-r_L' + str(r_L) + 'phi_E{:.2f}'.format(phi_E)
 def prototype():
     return d_runs[(1e6, 0.)]
 default_suffix = '.run.pkl'
