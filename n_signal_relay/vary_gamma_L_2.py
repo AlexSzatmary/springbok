@@ -17,7 +17,7 @@ L_L_00 = [1e-1, 1e0, 1e1]
 L_phi_E = [0., 0.5, 1.]
 
 # rough values taken from n_exo-2016-05-21
-d_r_L = {0.: 1.5, 0.25: 1.5, 0.5: 5, 0.75: 1e0, 1.: 1.5e1}
+d_r_L = {0.: 72., 0.25: 81., 0.5: 105., 0.75: 119., 1.: 208.}
 
 #Required by Meerkat
 L_variables = [L_gamma_L, L_L_00, L_phi_E]
