@@ -21,6 +21,7 @@ def get_d_N_props():
         length=10., persistence=1., speed=10.,
         sensitivity_F=200., sensitivity_L=200., F_xt=1e0,
         sigma_CL0=30., b_L=0., sigma_CE0=0., b_E=0.,
+        F_CL=10., F_CE=10.,
         K_d_F=1., K_d_L=1., n=500, x_max=1e4, n_t=get_d_gen_props()['Nt'])
 
 def get_d_E_props():
@@ -38,7 +39,8 @@ class Neutrophil(springbok.Cell):
             self, length=None,
             persistence=None, speed=None,
             sensitivity_F=None, sensitivity_L=None, F_xt=None,
-            sigma_CL0=None, b_L=None, sigma_CE0=None, b_E=None,
+            sigma_CL0=None, F_CL=None, b_L=None, sigma_CE0=None, b_E=None,
+            F_CE=None,
             n_t=None, xy_0=None, K_d_F=None, K_d_L=None, index=None):
         self.length = length
         self.sensitivity_F = sensitivity_F
@@ -57,8 +59,10 @@ class Neutrophil(springbok.Cell):
         self.F_xt = F_xt
         self.sigma_CL0 = sigma_CL0
         self.b_L = b_L
+        self.F_CL = F_CL
         self.sigma_CE0 = sigma_CE0
         self.b_E = b_E
+        self.F_CE = F_CE
 
     def orient(self, L_condition, clock):
         kappa = self.kappa(L_condition)
@@ -88,9 +92,9 @@ class Neutrophil(springbok.Cell):
         exo, dexodx = L_condition[1]
         L, dLdx = L_condition[2]
         sigma_CE = self.sigma_CE0 * (self.b_E +
-                                     (1. - self.b_E) * (F / (1. + F)))
+                                     (1. - self.b_E) * (F / (self.F_CL + F)))
         sigma_CL = self.sigma_CL0 * (self.b_L +
-                                     (1. - self.b_L) * (F / (1. + F)))
+                                     (1. - self.b_L) * (F / (self.F_CE + F)))
         self.a_secrete[clock] = np.array([0., sigma_CE, sigma_CL])
         return self.a_secrete[clock]
 
