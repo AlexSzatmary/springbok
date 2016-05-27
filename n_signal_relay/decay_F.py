@@ -32,8 +32,9 @@ def run():
 
 class SpringbokPreRun(springbok.Springbok):
     def __init__(self, L_cell_group, pde_stepper, clock_start, clock_end,
-                 prerun):
+                 prerun, remove_F_abrupt=False):
         self.prerun = prerun
+        self.remove_F_abrupt = remove_F_abrupt
         for cg in prerun.L_cell_group: # Keep cells in prerun immobile
             for cell in cg.L_cell:
                 cell.speed = 0.
@@ -42,10 +43,13 @@ class SpringbokPreRun(springbok.Springbok):
     def run(self):
         self.prerun.run()
 
-        for pde in self.pde_stepper.L_pde:
-            pde.u = np.zeros((self.pde_stepper.Nt, np.size(pde.u_0)))
-        self.pde_stepper.L_pde[0].u_0 = np.zeros(np.shape(
-                self.prerun.pde_stepper.L_pde[0].u_0))
+        # for pde in self.pde_stepper.L_pde:
+        #     pde.u = np.zeros((self.pde_stepper.Nt, np.size(pde.u_0)))
+        if self.remove_F_abrupt:
+            self.pde_stepper.L_pde[0].u_0 = np.zeros(np.shape(
+                    self.prerun.pde_stepper.L_pde[0].u_0))
+        else:
+            self.pde_stepper.L_pde[0].u_0 = self.prerun.pde_stepper.L_pde[0].u[-1]
         self.pde_stepper.L_pde[1].u_0 = self.prerun.pde_stepper.L_pde[1].u[-1]
         self.pde_stepper.L_pde[2].u_0 = self.prerun.pde_stepper.L_pde[2].u[-1]
         self.pde_stepper.u = np.zeros((self.pde_stepper.Nt, np.size(self.pde_stepper.u_0)))
@@ -58,11 +62,14 @@ class SpringbokPreRun(springbok.Springbok):
 def new_setup(
         pde_stepper=None, pde_stepper_prerun=None,
         name='new_setup', d_gen_props=None, d_N_props=None,
-        L_cell_group=None, d_PDE_props=None, d_E_props=None, set_name=None):
+        L_cell_group=None, d_PDE_props=None, d_E_props=None, set_name=None,
+        remove_F_abrupt=False):
     if pde_stepper is None:
         pde_stepper = n_exo.new_make_pde_stepper(d_E_props, d_PDE_props)
     if pde_stepper_prerun is None:
-        pde_stepper_prerun = n_exo.new_make_pde_stepper(d_E_props, d_PDE_props)
+        d_PDE_props_prerun = d_PDE_props.copy()
+        d_PDE_props_prerun['gamma_F'] = 0.
+        pde_stepper_prerun = n_exo.new_make_pde_stepper(d_E_props, d_PDE_props_prerun)
     cg_prerun = make_random_N(d_N_props=d_N_props)
     prerun = springbok.Springbok(
         L_cell_group=[cg_prerun], pde_stepper=pde_stepper_prerun,
@@ -70,7 +77,7 @@ def new_setup(
     model = SpringbokPreRun(
         L_cell_group=L_cell_group, pde_stepper=pde_stepper,
         clock_start=1, clock_end=d_gen_props['Nt'] - 1,
-        prerun=prerun)
+        prerun=prerun, remove_F_abrupt=remove_F_abrupt)
     model.name = name
     if set_name is None:
         model.set_name = SET_NAME
@@ -96,7 +103,7 @@ def new_setup_random_N(d_N_props=None, **kwargs):
     return new_setup(L_cell_group=[cg], d_N_props=d_N_props, **kwargs)
 
 
-def make_decay_F_prerun(r_L=None, phi_E=0., gamma_F=0.):
+def make_decay_F_prerun(r_L=None, phi_E=0., gamma_F=0., remove_F_abrupt=False):
     if r_L is None:
         r_L = 1e6
     d_gen_props = n_exo.get_d_gen_props()
@@ -136,7 +143,7 @@ def make_decay_F(r_L=None, phi_E=0., gamma_F=1.):
 
 def setup(r_L, phi_E):
     jn = job_name(r_L, phi_E)
-    run = make_decay_F(r_L=r_L, phi_E=phi_E, gamma_F=0.1)
+    run = make_decay_F_prerun(r_L=r_L, phi_E=phi_E, gamma_F=0.2)
     run.job_name = jn
     with open(jn + '.pkl', 'wb') as hout:
         cloudpickle.dump(run, hout)
