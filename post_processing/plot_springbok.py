@@ -798,7 +798,7 @@ def get_range_continuous(model, CI_threshold, j):
     a_kappa = get_a_kappa(model, j)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
-    return np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx
+    return (a_continuous[-1, 1] - a_continuous[-1, 0]) * model.pde_stepper.L_pde[0].dx
 #    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
 
 def get_continuous(a):
