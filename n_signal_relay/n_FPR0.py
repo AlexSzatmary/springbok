@@ -8,7 +8,7 @@ import numpy as np
 import runner
 
 
-L_r_L = [1e0]
+L_r_L = [1e1]
 #L_r_L = [0., 1e4, 1e6, 1e8, 1e10, 1e12]
 #L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 L_phi_E = [0.]
