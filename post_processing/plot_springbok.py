@@ -710,7 +710,7 @@ def confection_n_BLT0_2(
     return fig
 
 
-def confection_init_rec(init_rec, r_L=1e1, Style=platypus.MBOC,
+def confection_init_rec(init_rec, r_L=1e2, Style=platypus.MBOC,
                         file_name='confection_init_rec'):
     if Style is platypus.Poster:
         kw0 = dict(panesize=(7., 3.5))
@@ -849,7 +849,7 @@ def plot_range_vary_phi_E(n_exo, fig=None, Style=platypus.MBOC,
         #        L_legend=[r'$r_L=10^{{{}}}$'.format(int(np.log10(r_L))) if r_L != 0. else r'$r_L=0$' for r_L in L_r_L],
         L_legend=[r'$r_L={:.2e}'.format(r_L) + 'K_d/\mathrm{min}$' if r_L != 0. else r'$r_L=0$' for r_L in L_r_L],
         xlabel=r'Fraction of LTB$_4$ secreted via exosomes, $\phi_E$',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -877,7 +877,7 @@ def plot_range_vary_r_L(n_exo, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
         xlabel='Characteristic LTB$_4$ secretion rate, $r_L$, $K_d/\mathrm{min}$',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -900,6 +900,23 @@ def plot_range(n_exo, Style=platypus.MBOC, file_name='range'):
         fig.savefig(file_name, path=path)
     return fig
 
+def plot_range_2(n_exo, vary_gamma_L, vary_gamma_L_2, Style=platypus.MBOC, file_name='range_2'):
+    if Style is platypus.Poster:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3., 3.))
+    fig = Style(subplot=(3, 2, 1), **kw0)
+    figx = plot_range_vary_r_L(n_exo, fig=fig, file_name=None)
+    fig.add_subplot(3, 2, 3)
+    figx = plot_range_vary_gamma_L(vary_gamma_L, fig=fig, r_L=1e1, file_name=None)
+    fig.add_subplot(3, 2, 5)
+    figx = plot_range_vary_gamma_L_2(vary_gamma_L_2, fig=fig, file_name=None)
+    fig.set_AB_labels(loc='upper right')
+    if file_name:
+        path = os.path.join('plots', n_exo.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
 def rr_vs_t(n_exo):
     fig = platypus.multi_plot([np.arange(1, 61)]*5, [np.array([get_range_continuous(run, 0.5, i) for i in range(1, 61)]) for run in [n_exo.d_runs[1.5, phi_E] for phi_E in n_exo.L_phi_E]], file_name='rr-vs-t-r_L1.5', path='plots/n_exo-2016-05-21/print/', xlabel='Time, min', ylabel=r'Recruitment range, $\mu m$')
     return fig
@@ -915,7 +932,7 @@ def plot_range_vary_D_L(vary_D_L, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_D_L.L_phi_E],
         xlabel=r'LTB$_4$ diffusion coefficient, $D_L$, $\mathrm{\mu m}^2/s$',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -934,7 +951,7 @@ def plot_range_vary_gamma_L(vary_gamma_L, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
         xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -953,7 +970,7 @@ def plot_range_vary_gamma_L_2(vary_gamma_L_2, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L_2.L_phi_E],
         xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -972,7 +989,7 @@ def plot_range_vary_ell_L_D_L(vary_D_L, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_D_L.L_phi_E],
         xlabel=r'LTB$_4$ characteristic length, $\ell_L$, $\mathrm{\mu m}$',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
@@ -991,7 +1008,7 @@ def plot_range_vary_ell_L_gamma_L(vary_gamma_L, fig=None, Style=platypus.MBOC,
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
         xlabel=r'LTB$_4$ characteristic length, $\ell_L$, $\mathrm{\mu m}$',
-        ylabel='Range for directed migration, $\mu m$',
+        ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
         fig=fig)
     if file_name:
