@@ -676,6 +676,39 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     return fig
 
 
+def confection_n_BLT0_TmT(
+        n_BLT0, file_name='confection_n_BLT0-TmT',
+        Style=platypus.MBOC,
+        xlim=(2e3, 4e3),
+        r_L=1e1,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = n_BLT0.L_runs[0]
+    if Style is platypus.Poster:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3., 3.))
+    fig = Style(subplot=(1, 2, 1), axes=[0., 0., 0.8, 0.8], **kw0)
+    plot_tracks(n_BLT0.d_runs[r_L, 0., False], file_name=False, fig=fig, **kwargs)
+    ax = fig.fig.gca()
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    for k, v in ax.spines.items():
+        v.set_visible(False)
+#    fig.fig.add_subplot(1, 2, 2, axes=[0.1, 0., 0.9, 0.9])
+    fig.fig.add_axes([0.6, 0., 0.4, 0.8])
+    plot_tracks(n_BLT0.d_runs[r_L, 0., True], file_name=False, fig=fig, **kwargs)
+    ax = fig.fig.gca()
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    for k, v in ax.spines.items():
+        v.set_visible(False)
+    if file_name:
+        path = os.path.join('plots', n_BLT0.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
 def confection_n_BLT0_2(
         n_BLT0, file_name='confection_n_BLT0_2',
         Style=platypus.MBOC,
@@ -908,7 +941,7 @@ def plot_range_2(n_exo, vary_gamma_L, vary_gamma_L_2, Style=platypus.MBOC, file_
     fig = Style(subplot=(3, 2, 1), **kw0)
     figx = plot_range_vary_r_L(n_exo, fig=fig, file_name=None)
     fig.add_subplot(3, 2, 3)
-    figx = plot_range_vary_gamma_L(vary_gamma_L, fig=fig, r_L=1e1, file_name=None)
+    figx = plot_range_vary_gamma_L(vary_gamma_L, fig=fig, L_0=1e0, file_name=None)
     fig.add_subplot(3, 2, 5)
     figx = plot_range_vary_gamma_L_2(vary_gamma_L_2, fig=fig, file_name=None)
     fig.set_AB_labels(loc='upper right')
@@ -941,12 +974,12 @@ def plot_range_vary_D_L(vary_D_L, fig=None, Style=platypus.MBOC,
     return figx
 
 def plot_range_vary_gamma_L(vary_gamma_L, fig=None, Style=platypus.MBOC,
-                          file_name='vary-ell_L-gamma_L', r_L=1e6):
+                          file_name='vary-ell_L-gamma_L', L_0=1e0):
     if fig is None:
         fig = Style(subplot=(1, 2, 1))
     figx = platypus.multi_plot(
-        [vary_gamma_L.L_gamma_L] * len(vary_gamma_L.L_r_L),
-        [[get_range_continuous(vary_gamma_L.d_runs[gamma_L, r_L, phi_E], 0.5, 60)
+        [vary_gamma_L.L_gamma_L] * len(vary_gamma_L.L_L_00),
+        [[get_range_continuous(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], 0.5, 60)
           for gamma_L in vary_gamma_L.L_gamma_L] for phi_E in vary_gamma_L.L_phi_E],
         xlog=True,
         L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
