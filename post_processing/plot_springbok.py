@@ -546,10 +546,10 @@ def confection_n_FPR0_3(
     fig.title('WT')
 
     fig.add_subplot(4, 3, 7)
-    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 4.), **kwargs)
+    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.add_subplot(4, 3, 10)
-    plot_LTB(model, fig=fig, ylog=False, **kwargs)
+    plot_LTB(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.add_subplot(2, 3, 2)
     model = n_FPR0.L_runs[1]
@@ -558,10 +558,10 @@ def confection_n_FPR0_3(
     fig.title('FPR-')
 
     fig.add_subplot(4, 3, 8)
-    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 4.), **kwargs)
+    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.add_subplot(4, 3, 11)
-    plot_LTB(model, fig=fig, ylog=False, **kwargs)
+    plot_LTB(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.add_subplot(2, 3, 3)
     model = n_FPR0.L_runs[2]
@@ -571,13 +571,13 @@ def confection_n_FPR0_3(
                 color_f=lambda x: platypus.color_f_color(2),
                 cell_group_i=1,
                 **kwargs)
-    fig.title('Mixed')
+    fig.title('WT & FPR-')
 
     fig.add_subplot(4, 3, 9)
-    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 4.), **kwargs)
+    plot_fMLP(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.add_subplot(4, 3, 12)
-    plot_LTB(model, fig=fig, ylog=False, **kwargs)
+    plot_LTB(model, fig=fig, ylog=False, ylim=(0., 5.), yint=True, **kwargs)
 
     fig.set_AB_labels()
     if file_name:
@@ -646,8 +646,8 @@ def confection_n_FPR0_4(
 #[post_processing.confection_n_BLT0(n_BLT0, r_L=r_L, file_name='confection_n_BLT0-r_L{:.1e}'.format(r_L)) for r_L in n_BLT0.L_r_L]
 def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
                       Style=platypus.MBOC,
-                      xlim=(1e3, 4e3),
-                      r_L=1e1,
+                      xlim=(1.5e3, 3.5e3),
+                      r_L=1e2,
                       **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
@@ -679,8 +679,8 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
 def confection_n_BLT0_TmT(
         n_BLT0, file_name='confection_n_BLT0-TmT',
         Style=platypus.MBOC,
-        xlim=(2e3, 4e3),
-        r_L=1e1,
+        xlim=(1.5e3, 3.5e3),
+        r_L=1e2,
         **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
@@ -717,28 +717,94 @@ def confection_n_BLT0_2(
         **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
-    gs = matplotlib.gridspec.GridSpec(6, 1)
+    axes = [0.2,  0.2, 0.7,  0.7]
+    panesize = (3., 3)
+# cellH = totHeight/(nrows + hspace*(nrows-1))
+# sepH = hspace*cellH
+# sepH = hspace*totHeight/(nrows + hspace*(nrows-1))
+# sepH*(nrows + hspace*(nrows-1)) = hspace*(1 - h / )
+    gs = platypus.make_grid_spec(4, 1, height_ratios=[0.5, 1, 1, 0.5], axes=axes)
+    figsize = platypus.make_figsize(gs, panesize)
+    print(figsize)
+#    gs = matplotlib.gridspec.GridSpec(4, 1, height_ratios=[1, 2, 2, 1])
+    tup = (gs.get_geometry()[0], gs.get_geometry()[1], 1)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3., 3.))
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+#    fig.add_subplot(gs.new_subplotspec((0, 0)))
+    # if file_name:
+    #     path = os.path.join('plots', n_BLT0.set_name, fig.style)    
+    #     fig.savefig(file_name, path=path)
+    # return fig
+    plot_fMLP(n_BLT0.d_runs[r_L, 0., False], fig=fig, ylog=False, **kwargs)
+
+#    fig.add_subplot(gs.new_subplotspec((1, 0), rowspan=2))
+    fig.add_subplot(gs.new_subplotspec((1, 0)))
+    fig.title('BLT-')
+    plot_tracks(n_BLT0.d_runs[r_L, 0., False], file_name=False, fig=fig, **kwargs)
+
+#    fig.add_subplot(gs.new_subplotspec((3, 0), rowspan=2))
+    fig.add_subplot(gs.new_subplotspec((2, 0)))
+    plot_tracks(n_BLT0.d_runs[r_L, 0., True], file_name=False, fig=fig, **kwargs)
+    fig.title('BLT+')
+
+#    fig.add_subplot(gs[5])
+    fig.add_subplot(gs[3])
+    plot_LTB(n_BLT0.d_runs[r_L, 0., True], fig=fig, ylog=False, ylim=(0., 10.), **kwargs)
+    fig.set_AB_labels()
+    if file_name:
+        path = os.path.join('plots', n_BLT0.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
+def confection_n_exo(
+        n_exo, file_name='confection_n_exo',
+        Style=platypus.MBOC,
+        xlim=(1e3, 4e3),
+        r_L=1e1,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = n_exo.L_runs[0]
+    gs = matplotlib.gridspec.GridSpec(6, 2)
     tup = (gs.get_geometry()[0], gs.get_geometry()[1], 1)
     if Style in [platypus.Poster, platypus.MBOC]:
         kw0 = {}
     else:
         kw0 = dict(panesize=(3., 3.))
     fig = Style(subplot=tup, **kw0)
-    plot_fMLP(n_BLT0.d_runs[r_L, 0., False], fig=fig, ylog=False, **kwargs)
+    plot_fMLP(n_exo.d_runs[r_L, 0.], fig=fig, ylog=False, **kwargs)
+
+    fig.add_subplot(gs[1])
+    plot_fMLP(n_exo.d_runs[r_L, 1.], fig=fig, ylog=False, **kwargs)
 
     fig.add_subplot(gs.new_subplotspec((1, 0), rowspan=2))
-    fig.title('BLT-')
-    plot_tracks(n_BLT0.d_runs[r_L, 0., False], file_name=False, fig=fig, **kwargs)
+    fig.title('Direct')
+    plot_tracks(n_exo.d_runs[r_L, 0.], file_name=False, fig=fig, **kwargs)
 
-    fig.add_subplot(gs.new_subplotspec((3, 0), rowspan=2))
-    plot_tracks(n_BLT0.d_runs[r_L, 0., True], file_name=False, fig=fig, **kwargs)
-    fig.title('BLT+')
+    fig.add_subplot(gs.new_subplotspec((1, 1), rowspan=2))
+    plot_tracks(n_exo.d_runs[r_L, 1.], file_name=False, fig=fig, **kwargs)
+    fig.title('Exosome')
 
-    fig.add_subplot(gs[5])
-    plot_LTB(n_BLT0.d_runs[r_L, 0., True], fig=fig, ylog=False, ylim=(0., 10.), **kwargs)
+    fig.add_subplot(gs[6])
+    plot_exo(n_exo.d_runs[r_L, 0.], fig=fig, ylim=(0., 1.), **kwargs)
+    fig.add_subplot(gs[7])
+    plot_exo(n_exo.d_runs[r_L, 1.], fig=fig, ylim=(0., 1.), **kwargs)
+
+    fig.add_subplot(gs[8])
+    plot_LTB(n_exo.d_runs[r_L, 0.], fig=fig, ylog=False, ylim=(0., 10.), **kwargs)
+    fig.add_subplot(gs[9])
+    plot_LTB(n_exo.d_runs[r_L, 1.], fig=fig, ylog=False, ylim=(0., 10.), **kwargs)
+    fig.add_subplot(gs[10])
+    plot_cos(n_exo.d_runs[r_L, 0.], fig=fig, ylim=(-0.1, 1.), **kwargs)
+    fig.add_subplot(gs[11])
+    plot_cos(n_exo.d_runs[r_L, 1.], fig=fig, ylim=(-0.1, 1.), **kwargs)
+
     fig.set_AB_labels()
     if file_name:
-        path = os.path.join('plots', n_BLT0.set_name, fig.style)    
+        path = os.path.join('plots', n_exo.set_name, fig.style)    
         fig.savefig(file_name, path=path)
     return fig
 
@@ -938,11 +1004,11 @@ def plot_range_2(n_exo, vary_gamma_L, vary_gamma_L_2, Style=platypus.MBOC, file_
         kw0 = {}
     else:
         kw0 = dict(panesize=(3., 3.))
-    fig = Style(subplot=(3, 2, 1), **kw0)
+    fig = Style(subplot=(2, 2, 1), **kw0)
     figx = plot_range_vary_r_L(n_exo, fig=fig, file_name=None)
-    fig.add_subplot(3, 2, 3)
+    fig.add_subplot(2, 2, 3)
     figx = plot_range_vary_gamma_L(vary_gamma_L, fig=fig, L_0=1e0, file_name=None)
-    fig.add_subplot(3, 2, 5)
+    fig.add_subplot(2, 2, 4)
     figx = plot_range_vary_gamma_L_2(vary_gamma_L_2, fig=fig, file_name=None)
     fig.set_AB_labels(loc='upper right')
     if file_name:
@@ -978,11 +1044,11 @@ def plot_range_vary_gamma_L(vary_gamma_L, fig=None, Style=platypus.MBOC,
     if fig is None:
         fig = Style(subplot=(1, 2, 1))
     figx = platypus.multi_plot(
-        [vary_gamma_L.L_gamma_L] * len(vary_gamma_L.L_L_00),
+        [vary_gamma_L.L_gamma_L] * len(vary_gamma_L.L_phi_E),
         [[get_range_continuous(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], 0.5, 60)
           for gamma_L in vary_gamma_L.L_gamma_L] for phi_E in vary_gamma_L.L_phi_E],
         xlog=True,
-        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
+#        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L.L_phi_E],
         xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
         ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
@@ -997,11 +1063,11 @@ def plot_range_vary_gamma_L_2(vary_gamma_L_2, fig=None, Style=platypus.MBOC,
     if fig is None:
         fig = Style(subplot=(1, 2, 1))
     figx = platypus.multi_plot(
-        [vary_gamma_L_2.L_gamma_L] * len(vary_gamma_L_2.L_L_00),
+        [vary_gamma_L_2.L_gamma_L] * len(vary_gamma_L_2.L_phi_E),
         [[get_range_continuous(vary_gamma_L_2.d_runs[gamma_L, L_0, phi_E], 0.5, 60)
           for gamma_L in vary_gamma_L_2.L_gamma_L] for phi_E in vary_gamma_L_2.L_phi_E],
         xlog=True,
-        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L_2.L_phi_E],
+#        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in vary_gamma_L_2.L_phi_E],
         xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
         ylabel='Recruitment range, $\mu m$',
         ylim=(0., 2000.),
