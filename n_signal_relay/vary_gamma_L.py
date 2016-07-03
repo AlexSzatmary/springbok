@@ -13,13 +13,13 @@ import runner
 L_gamma_L = [5e2, 2e2, 1e2, 5e1, 2e1, 1e1, 5e0, 2e0, 1e0, 5e-1, 2e-1, 1e-1, 5e-2, 2e-2, 1e-2, 5e-3, 2e-3, 1e-3]
 #L_gamma_L = [5e-1, 2e-1, 1e-1]
 L_L_00 = [1e-1, 1e0, 1e1]
-L_phi_E = [0., 0.5, 1.]
+L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 
 # rough values taken from n_exo-2016-05-27
 d_r_L = {0.: 50., 0.25: 75., 0.5: 100., 0.75: 100., 1.: 200.}
 
 #Required by Meerkat
-L_variables = [L_gamma_L, L_r_L, L_phi_E]
+L_variables = [L_gamma_L, L_L_00, L_phi_E]
 
 one_job = False
 
