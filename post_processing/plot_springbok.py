@@ -444,7 +444,7 @@ def plot_LTB(model, fig=None, use_mm=True, xint=True, yint=True, **kwargs):
                        **kwargs)
 
 
-def plot_kappa(model, fig=None, use_mm=True, xint=True, yint=True, n=11, **kwargs):
+def plot_kappa(model, fig=None, use_mm=True, xint=True, yint=True, n=11, f_kappa=None, **kwargs):
     if use_mm:
         ratio = 1e3
         units = 'mm'
@@ -460,7 +460,7 @@ def plot_kappa(model, fig=None, use_mm=True, xint=True, yint=True, n=11, **kwarg
     if n != 1:
         fig.multi_plot([model.pde_stepper.L_pde[0].x[1:-1] / ratio] * n,
 #                       pde.u[0::(Nt-1) / (n - 1)],
-                       [get_a_kappa(model, j) for j in
+                       [get_a_kappa(model, j, f_kappa=f_kappa) for j in
                         range(0, Nt, int((Nt-1) / (n - 1)))],
                        xlabel=r'x, ' + units,
                        color_f=lambda i: platypus.blues_color_f2(float(i) / n),
@@ -468,14 +468,14 @@ def plot_kappa(model, fig=None, use_mm=True, xint=True, yint=True, n=11, **kwarg
                        **kwargs)
     else:
         fig.multi_plot([model.pde_stepper.L_pde[0].x[1:-1]] * n,
-                       [get_a_kappa(model, 0)],
+                       [get_a_kappa(model, 0, f_kappa=f_kappa)],
                        xlabel=r'x, ' + units,
                        ylim=(0., 1.),
                        color_f=platypus.color_f_black,
                        xint=xint, yint=yint)
                        
 
-def plot_cos(model, fig=None, use_mm=True, xint=True, yint=True, n=11, color_f=platypus.greys_color_f2, **kwargs):
+def plot_cos(model, fig=None, use_mm=True, xint=True, yint=True, n=11, color_f=platypus.greys_color_f2, f_kappa=None, ylim=(0., 1.), **kwargs):
     if use_mm:
         ratio = 1e3
         units = 'mm'
@@ -489,30 +489,28 @@ def plot_cos(model, fig=None, use_mm=True, xint=True, yint=True, n=11, color_f=p
         kwargs['ylabel'] = r'$<\cos \theta>(x)$'
     Nt = model.pde_stepper.Nt
     if n != 1:
-        for j in range(0, Nt, int((Nt-1) / (n - 1))):
-            a_kappa = get_a_kappa(model, j)
         fig.multi_plot([model.pde_stepper.L_pde[0].x[1:-1] / ratio] * n,
 #                       pde.u[0::(Nt-1) / (n - 1)],
-                       [flux.mean_velocity_fast(get_a_kappa(model, j)) for j in
+                       [flux.mean_velocity_fast(get_a_kappa(model, j, f_kappa=f_kappa)) for j in
                         range(0, Nt, int((Nt-1) / (n - 1)))],
                        xlabel=r'x, ' + units,
-                       xint=xint, yint=yint,
+                       xint=xint, yint=yint, ylim=ylim,
                        color_f=lambda i: color_f(float(i) / n), **kwargs)
     else:
         fig.multi_plot([model.pde_stepper.L_pde[0].x[1:-1] / ratio] * n,
-                       [flux.mean_velocity_fast(get_a_kappa(model, 0))],
+                       [flux.mean_velocity_fast(get_a_kappa(model, 0, f_kappa=f_kappa))],
                        xlabel=r'x, ' + units,
-                       ylim=(0., 1.),
+                       ylim=ylim,
                        xint=xint, yint=yint,
                        color_f=platypus.color_f_black)
                        
 
-def plot_cos_t(model, ix, fig=None, color_f=platypus.color_f_black, **kwargs):
+def plot_cos_t(model, ix, fig=None, color_f=platypus.color_f_black, f_kappa=None, **kwargs):
     if 'ylabel' not in kwargs:
         kwargs['ylabel'] = r'$<\cos \theta>(x)$'
     Nt = model.pde_stepper.Nt
     fig.multi_plot([np.arange(Nt)],
-                   [[flux.mean_velocity_fast(get_a_kappa(model, j)[ix])
+                   [[flux.mean_velocity_fast(get_a_kappa(model, j, f_kappa=f_kappa)[ix])
                     for j in np.arange(Nt)]],
                    xlabel=r't, min',
                    ylim=(0., 1.),
@@ -1026,6 +1024,234 @@ def confection_n_exo_projector(
     return fig
 
 
+def confection_n_exo_vary_r_L(
+        n_exo, file_name='confection_n_exo_vary_r_L',
+        Style=platypus.MBOC,
+        xlim=(1e3, 4e3),
+        L_r_L=[1e0, 1e1, 1e2], phi_E=0.,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = n_exo.L_runs[0]
+    axes = Style.def_axes
+    gs = platypus.make_grid_spec(3, len(L_r_L), height_ratios=[0.5, 0.5, 0.5],
+                                 axes=axes)
+    figsize = platypus.make_figsize(gs, Style.def_panesize)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    for (i, r_L) in enumerate(L_r_L):
+        if i:
+            fig.add_subplot(gs[0, i])
+        plot_fMLP(n_exo.d_runs[r_L, phi_E], fig=fig, ylog=False, **kwargs)
+        fig.title(r'$r_L={:.2e}$'.format(r_L), y=0.9)
+
+    
+    for (i, r_L) in enumerate(L_r_L):
+        fig.add_subplot(gs[1, i])
+        plot_LTB(n_exo.d_runs[r_L, phi_E], fig=fig, **kwargs)
+
+    for (i, r_L) in enumerate(L_r_L):
+        fig.add_subplot(gs[2, i])
+        cell = n_exo.d_runs[r_L, phi_E].L_cell_group[0].L_cell[0]
+        f_kappa = lambda L_condition: cell.kappa(
+            [(0., 0.), (0., 0.), L_condition[2]])
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 f_kappa=f_kappa,
+                 **kwargs)
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.blues_color_f2,
+                 **kwargs)
+        f_kappa = lambda L_condition: cell.kappa(
+            [L_condition[0], (0., 0.), (0., 0.)])
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.greys_color_f,
+                 f_kappa=f_kappa,
+                 **kwargs)
+        fig.multi_plot([[0., 7.]], [[0.5, 0.5]], L_linestyle=['--'],
+                       color_f=platypus.color_f_black)
+
+    fig.set_AB_labels()
+    if file_name:
+        path = os.path.join('plots', n_exo.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
+def confection_vary_D_L(
+        vary_D_L, file_name='confection_vary_D_L',
+        Style=platypus.MBOC,
+        xlim=(1e3, 4e3),
+        L_D_L=[1e4, 6e4, 5e5], r_L=1e0, phi_E=0.,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = vary_D_L.L_runs[0]
+    axes = Style.def_axes
+    gs = platypus.make_grid_spec(3, len(L_D_L), height_ratios=[0.5, 0.5, 0.5],
+                                 axes=axes)
+    figsize = platypus.make_figsize(gs, Style.def_panesize)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    for (i, D_L) in enumerate(L_D_L):
+        if i:
+            fig.add_subplot(gs[0, i])
+        plot_fMLP(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig, ylog=False, **kwargs)
+        fig.title(r'$D_L={:.2e}$'.format(D_L), y=0.9)
+
+    
+    for (i, D_L) in enumerate(L_D_L):
+        fig.add_subplot(gs[1, i])
+        plot_LTB(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig, **kwargs)
+
+    for (i, D_L) in enumerate(L_D_L):
+        fig.add_subplot(gs[2, i])
+        cell = vary_D_L.d_runs[D_L, r_L, phi_E].L_cell_group[0].L_cell[0]
+        f_kappa = lambda L_condition: cell.kappa(
+            [(0., 0.), (0., 0.), L_condition[2]])
+        plot_cos(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 f_kappa=f_kappa,
+                 **kwargs)
+        plot_cos(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.blues_color_f2,
+                 **kwargs)
+        f_kappa = lambda L_condition: cell.kappa(
+            [L_condition[0], (0., 0.), (0., 0.)])
+        plot_cos(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.greys_color_f,
+                 f_kappa=f_kappa,
+                 **kwargs)
+        fig.multi_plot([[0., 7.]], [[0.5, 0.5]], L_linestyle=['--'],
+                       color_f=platypus.color_f_black)
+
+    fig.set_AB_labels()
+    if file_name:
+        path = os.path.join('plots', vary_D_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
+def confection_vary_gamma_L(
+        vary_gamma_L, file_name='confection_vary_gamma_L',
+        Style=platypus.MBOC,
+        xlim=(1e3, 4e3),
+        L_gamma_L=[1e-1, 1., 1e1], L_0=1e0, phi_E=0.,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = vary_gamma_L.L_runs[0]
+    axes = Style.def_axes
+    gs = platypus.make_grid_spec(3, len(L_gamma_L), height_ratios=[0.5, 0.5, 0.5],
+                                 axes=axes)
+    figsize = platypus.make_figsize(gs, Style.def_panesize)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        if i:
+            fig.add_subplot(gs[0, i])
+        plot_fMLP(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig, ylog=False, **kwargs)
+        fig.title(r'$\gamma_L={:.2e}$'.format(gamma_L), y=0.9)
+
+    
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        fig.add_subplot(gs[1, i])
+        plot_LTB(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig, **kwargs)
+
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        fig.add_subplot(gs[2, i])
+        cell = vary_gamma_L.d_runs[gamma_L, L_0, phi_E].L_cell_group[0].L_cell[0]
+        f_kappa = lambda L_condition: cell.kappa(
+            [(0., 0.), (0., 0.), L_condition[2]])
+        plot_cos(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig,
+                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 f_kappa=f_kappa,
+                 **kwargs)
+        plot_cos(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig,
+                 yint=False, color_f=platypus.blues_color_f2,
+                 **kwargs)
+        f_kappa = lambda L_condition: cell.kappa(
+            [L_condition[0], (0., 0.), (0., 0.)])
+        plot_cos(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig,
+                 yint=False, color_f=platypus.greys_color_f,
+                 f_kappa=f_kappa,
+                 **kwargs)
+        fig.multi_plot([[0., 7.]], [[0.5, 0.5]], L_linestyle=['--'],
+                       color_f=platypus.color_f_black)
+
+    fig.set_AB_labels()
+    if file_name:
+        path = os.path.join('plots', vary_gamma_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
+def confection_vary_gamma_L_2(
+        vary_gamma_L_2, file_name='confection_vary_gamma_L_2',
+        Style=platypus.MBOC,
+        xlim=(1e3, 4e3),
+        L_gamma_L=[1e-1, 2/3, 1e1], L_00=1e0, phi_E=0.,
+        **kwargs):
+    kwargs['xlim'] = xlim
+    model = vary_gamma_L_2.L_runs[0]
+    axes = Style.def_axes
+    gs = platypus.make_grid_spec(3, len(L_gamma_L), height_ratios=[0.5, 0.5, 0.5],
+                                 axes=axes)
+    figsize = platypus.make_figsize(gs, Style.def_panesize)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        if i:
+            fig.add_subplot(gs[0, i])
+        plot_fMLP(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig, ylog=False, **kwargs)
+        fig.title(r'$\gamma_L={:.2e}$'.format(gamma_L), y=0.9)
+
+    
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        fig.add_subplot(gs[1, i])
+        plot_LTB(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig, **kwargs)
+
+    for (i, gamma_L) in enumerate(L_gamma_L):
+        fig.add_subplot(gs[2, i])
+        cell = vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E].L_cell_group[0].L_cell[0]
+        f_kappa = lambda L_condition: cell.kappa(
+            [(0., 0.), (0., 0.), L_condition[2]])
+        plot_cos(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig,
+                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 f_kappa=f_kappa,
+                 **kwargs)
+        plot_cos(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig,
+                 yint=False, color_f=platypus.blues_color_f2,
+                 **kwargs)
+        f_kappa = lambda L_condition: cell.kappa(
+            [L_condition[0], (0., 0.), (0., 0.)])
+        plot_cos(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig,
+                 yint=False, color_f=platypus.greys_color_f,
+                 f_kappa=f_kappa,
+                 **kwargs)
+        fig.multi_plot([[0., 7.]], [[0.5, 0.5]], L_linestyle=['--'],
+                       color_f=platypus.color_f_black)
+
+    fig.set_AB_labels()
+    if file_name:
+        path = os.path.join('plots', vary_gamma_L_2.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
 def set_init_rec(init_rec, x_0=3600.):
     for run in init_rec.L_runs:
         for pde in run.pde_stepper.L_pde:
@@ -1206,15 +1432,15 @@ def confection_decay_F_projector(decay_F, Style=platypus.Projector,
 def get_range_time_averaged(model, CI_threshold):
     return np.mean([get_range(model, CI_threshold, j) for j in range(model.pde_stepper.Nt)])
 
-def get_range(model, CI_threshold, j):
-    a_kappa = get_a_kappa(model, j)
+def get_range(model, CI_threshold, j, f_kappa=None):
+    a_kappa = get_a_kappa(model, j, f_kappa=f_kappa)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
     return np.sum(a_cos > CI_threshold) * model.pde_stepper.L_pde[0].dx
 #    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
 
-def get_range_continuous(model, CI_threshold, j):
-    a_kappa = get_a_kappa(model, j)
+def get_range_continuous(model, CI_threshold, j, f_kappa=None):
+    a_kappa = get_a_kappa(model, j, f_kappa=f_kappa)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
     return (a_continuous[-1, 1] - a_continuous[-1, 0]) * model.pde_stepper.L_pde[0].dx
@@ -1234,20 +1460,22 @@ def get_continuous(a):
         L_end.append(np.size(a))
     return np.array((L_start, L_end)).T
 
-def get_a_kappa(model, j):
+def get_a_kappa(model, j, f_kappa=None):
     a_L_condition = np.array([(pde.u[j, 1:-1], springbok.tiger.opdudx(pde.u[j], pde.dx))
                               for pde in model.pde_stepper.L_pde])
     cell = model.L_cell_group[0].L_cell[0]
-    return np.array([cell.kappa(a_L_condition[:, :, i]) for i in range(np.size(a_L_condition, 2))])
+    if f_kappa is None:
+        f_kappa = lambda L_condition: cell.kappa(L_condition)
+    return np.array([f_kappa(a_L_condition[:, :, i]) for i in range(np.size(a_L_condition, 2))])
 
-def table_about_range(n_exo):
+def table_about_range(n_exo, f_kappa=None):
     for F_xt in [1e-2, 3e-2, 1e-1, 3e-1, 1e0, 3e0, 1e1, 1e2, 1e3, 1e4, 1e5]:
         L_backwards = []
         L_range = []
         L_range_continuous = []
         for run in n_exo.L_runs:
             run.L_cell_group[0].L_cell[0].F_xt = F_xt
-            a_kappa = get_a_kappa(run, 60)
+            a_kappa = get_a_kappa(run, 60, f_kappa=f_kappa)
             a_cos = flux.mean_velocity_fast(a_kappa)
             L_backwards.append(np.sum(a_cos < 0.))
             L_range.append(get_range(run, 0.5, 60))
