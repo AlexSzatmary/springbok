@@ -510,7 +510,7 @@ def plot_cos_t(model, ix, fig=None, color_f=platypus.color_f_black, f_kappa=None
         kwargs['ylabel'] = r'$<\cos \theta>(x)$'
     Nt = model.pde_stepper.Nt
     fig.multi_plot([np.arange(Nt)],
-                   [[flux.mean_velocity_fast(get_a_kappa(model, j, f_kappa=f_kappa)[ix])
+                   [[np.mean(flux.mean_velocity_fast(get_a_kappa(model, j, f_kappa=f_kappa)[ix]))
                     for j in np.arange(Nt)]],
                    xlabel=r't, min',
                    ylim=(0., 1.),
@@ -525,7 +525,36 @@ def plot_cos_t_decay_F(decay_F, Style=platypus.MBOC, ix=350,
     if file_name:
         fig.savefig(file_name, path=path)
     return fig
-    
+
+def plot_cos_t_decay_F_vary_gamma_E(decay_F_vary_gamma_E, Style=platypus.MBOC, ix=None,
+                                    file_name='cos_t_decay_F_vary_gamma_E', r_L=1e1, phi_E=1., **kwargs):
+    if ix is None:
+        x = decay_F_vary_gamma_E.prototype().pde_stepper.L_pde[0].x
+        xmin = 3000.
+        xmax = 4000.
+        ix = np.where(np.logical_and(x >= xmin, x <= xmax))[0]
+    fig = Style();
+    path = os.path.join('plots', decay_F_vary_gamma_E.set_name, fig.style)
+    if 'ylabel' not in kwargs:
+        kwargs['ylabel'] = r'$<\cos \theta>(x)$'
+    Nt = decay_F_vary_gamma_E.prototype().pde_stepper.Nt
+    L_x = [np.arange(Nt) for gamma_E in decay_F_vary_gamma_E.L_gamma_E]
+    L_y = []
+    for gamma_E in decay_F_vary_gamma_E.L_gamma_E:
+        run = decay_F_vary_gamma_E.d_runs[r_L, phi_E, gamma_E]
+        y = [np.mean(flux.mean_velocity_fast(
+                    get_a_kappa(run, j))[ix]) for j in np.arange(Nt)]
+        L_y.append(y)
+    print([np.shape(L_x), np.shape(L_y)])
+    fig.multi_plot(L_x, L_y,
+                   xlabel=r't, min',
+                   ylim=(0., 1.),
+                   color_f=lambda x: platypus.blues_color_f2(x / len(L_x)), **kwargs)
+    if file_name:
+        fig.savefig(file_name, path=path)
+    return fig
+
+
 def confection_n_FPR0(n_FPR0, file_name='confection_n_FPR0',
                       Style=platypus.MBOC, xlim=(0., 7000.),
                       **kwargs):
@@ -1443,7 +1472,16 @@ def get_range_continuous(model, CI_threshold, j, f_kappa=None):
     a_kappa = get_a_kappa(model, j, f_kappa=f_kappa)
     a_cos = flux.mean_velocity_fast(a_kappa)
     a_continuous = get_continuous(a_cos > CI_threshold)
+    print(a_continuous)
     return (a_continuous[-1, 1] - a_continuous[-1, 0]) * model.pde_stepper.L_pde[0].dx
+#    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
+
+def get_range_max_continuous(model, CI_threshold, j, f_kappa=None):
+    a_kappa = get_a_kappa(model, j, f_kappa=f_kappa)
+    a_cos = flux.mean_velocity_fast(a_kappa)
+    a_continuous = get_continuous(a_cos > CI_threshold)
+#    print(a_continuous)
+    return np.max(a_continuous[:, 1] - a_continuous[:, 0]) * model.pde_stepper.L_pde[0].dx
 #    return np.sum(a_kappa > 0.4) * model.pde_stepper.L_pde[0].dx
 
 def get_continuous(a):
@@ -1692,6 +1730,26 @@ def plot_range_vary_ell_L_gamma_L(vary_gamma_L, fig=None, Style=platypus.MBOC,
         fig=fig)
     if file_name:
         path = os.path.join('plots', vary_gamma_L.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+
+def plot_range_vary_gamma_E(decay_F_vary_gamma_E, fig=None, Style=platypus.MBOC,
+                          file_name='decay_F_vary_gamma_E', phi_E=1.):
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [decay_F_vary_gamma_E.L_gamma_E] * len(decay_F_vary_gamma_E.L_r_L),
+        [[get_range_max_continuous(decay_F_vary_gamma_E.d_runs[r_L, phi_E, gamma_E], 0.5, 60)
+          for gamma_E in decay_F_vary_gamma_E.L_gamma_E] for r_L in decay_F_vary_gamma_E.L_r_L],
+        xlog=True,
+        L_legend=[r'$r_L={:.2e}$'.format(r_L) for r_L in decay_F_vary_gamma_E.L_r_L],
+        xlabel=r'Exosome decay rate $\gamma_E$, 1/min',
+        ylabel='Recruitment range, $\mu m$',
+        ylim=(0., 2000.),
+        fig=fig)
+    if file_name:
+        path = os.path.join('plots', decay_F_vary_gamma_E.set_name, fig.style)    
         fig.savefig(file_name, path=path)
     return figx
 
