@@ -30,7 +30,7 @@ def get_d_E_props():
 def get_d_PDE_props(d_N_props, d_gen_props):
     return dict(ell=4e2, x_0=3600.,
                 Nt=d_gen_props['Nt'], dt=d_N_props['persistence'],
-                x_r=1e4, n=1001, gamma_F=0., DL=6e4, gamma_L=1/1.5,
+                x_r=1e4, n=1001, gamma_F=0., DL=2.4e4, gamma_L=4./15.,
                 u_0=exp_u_0)
 
 

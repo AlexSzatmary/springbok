@@ -12,9 +12,8 @@ import runner
 #L_gamma_L = [400., 40., 4., 1/1.5, 0.4, 0.04, 0.004]
 L_gamma_L = [5e2, 2e2, 1e2, 5e1, 2e1, 1e1, 5e0, 2e0, 1e0, 2/3, 5e-1, 2e-1, 1e-1, 5e-2, 2e-2, 1e-2, 5e-3, 2e-3, 1e-3]
 #L_gamma_L = [5e-1, 2e-1, 1e-1]
-#L_gamma_L = [1e2, 1e1, 1e0, 1e-1, 1e-2, 1e-3]
 L_L_00 = [1e-1, 1e0, 1e1]
-L_phi_E = [0., 0.5, 1.]
+L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 
 # rough values taken from n_exo-2016-05-27
 d_r_L = {0.: 50., 0.25: 75., 0.5: 100., 0.75: 100., 1.: 200.}
@@ -31,7 +30,7 @@ def job_name(gamma_L, L_00, phi_E):
     L_0 = L_00 * d_r_L[phi_E] * 1.5 # or / gamma_L = (2/3)
     return 'vary_gamma_L_2-{:.4f}-L_0-{:.2f}-phi_E{:.2f}'.format(gamma_L, L_0, phi_E)
 def prototype():
-    return d_runs[(6e4, 1e0, 0.)]
+    return d_runs[(2/3, 1e0, 0.)]
 default_suffix = '.run.pkl'
 def run():
     runner.setup(L_job_name)
