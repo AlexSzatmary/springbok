@@ -51,6 +51,10 @@ def make_vary_gamma_L(gamma_L=None, r_L=None, phi_E=0., name=None):
         d_gen_props=d_gen_props,
         d_N_props=d_N_props, d_E_props=d_E_props,
         d_PDE_props=d_PDE_props, set_name='vary_gamma_L')
+    run.d_gen_props = d_gen_props
+    run.d_N_props = d_N_props
+    run.d_E_props = d_E_props
+    run.d_PDE_props = d_PDE_props
     return run
 
 def setup(gamma_L, L_00, phi_E):
