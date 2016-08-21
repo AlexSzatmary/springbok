@@ -9,6 +9,7 @@ import runner
 
 
 L_r_L = [1e-1, 1e0, 1e1, 1e2, 1e3, 1e4]
+L_r_L = [r_L / 2.5 for r_L in L_r_L]
 #L_r_L = [1e2]
 L_phi_E = [0., 1.]
 
