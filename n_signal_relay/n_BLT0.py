@@ -9,6 +9,7 @@ import runner
 
 
 L_r_L = [1e0, 1e1, 1e2]
+L_r_L = [r_L / 2.5 for r_L in L_r_L]
 #L_r_L = [0., 1e4, 1e6, 1e8, 1e10, 1e12]
 #L_phi_E = [0., 0.25, 0.5, 0.75, 1.]
 L_phi_E = [0.]
@@ -33,8 +34,8 @@ def run():
 #End required by Meerkat
 
 class BLT0(n_exo.Neutrophil):
-    def orient(self, L_condition, clock):
-        super().orient([L_condition[0], L_condition[1], (0., 0.)], clock)
+    def kappa(self, L_condition):
+        super().kappa([L_condition[0], L_condition[1], (0., 0.)], clock)
 
     def secrete(self, L_condition, clock):
         return super().secrete([L_condition[0], L_condition[1], (0., 0.)], clock)
