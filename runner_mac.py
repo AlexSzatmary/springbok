@@ -37,7 +37,7 @@ def main(argv=None):
     with open(fname + ext, 'rb') as hin:
         model = pickle.load(hin)
     model.run()
-
+    print(model.job_name)
     with open(fname + '.run' + ext, 'wb') as hout:
         cloudpickle.dump(model, hout)
 
