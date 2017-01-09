@@ -4,6 +4,7 @@ from scipy.interpolate import interp1d
 import sys
 sys.path.insert(-1, 'springbok/tiger')
 import tiger
+import time
 import pdb
 
 
@@ -63,6 +64,7 @@ class Springbok:
         self.clock_end = clock_end
 
     def run(self):
+        t_start = time.time()
         for self.clock in range(self.clock_start, self.clock_end + 1):
             L_condition_interp = [
                 (interp1d(pde.x, pde.u[self.clock - 1]),
@@ -104,3 +106,7 @@ class Springbok:
             for pde in self.pde_stepper.L_pde:
                 pde.f = pde.f_functional(*L_a_secrete)
             self.pde_stepper.step(self.clock)
+
+        # End of main loop, clean up
+        t_end = time.time()
+        self.wall_time = (t_end - t_start) / 3600.
