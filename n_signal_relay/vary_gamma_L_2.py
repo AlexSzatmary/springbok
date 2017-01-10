@@ -1,11 +1,12 @@
-#meerkat-copy springbok runner.py n_signal_relay/n_exo.py
+#meerkat-copy springbok runner_vary_gamma_L.py n_signal_relay/n_exo.py
+#meerkat-copy flux.py post_processing
 import sys
 import springbok
 import n_exo
 import cloudpickle
 import os
 import numpy as np
-import runner
+import runner_vary_gamma_L
 
 
 #L_r_L = [1e6]
@@ -33,7 +34,7 @@ def prototype():
     return d_runs[(2/3, 1e0, 0.)]
 default_suffix = '.run.pkl'
 def run():
-    runner.setup(L_job_name)
+    runner_vary_gamma_L.setup(L_job_name)
 # setup is also required
 #End required by Meerkat
 
