@@ -561,7 +561,7 @@ def plot_cos(model, fig=None, use_mm=True, xint=True, yint=True, n=11, color_f=p
                        xlabel=r'x, ' + units,
                        ylim=ylim,
                        xint=xint, yint=yint,
-                       color_f=platypus.color_f_black)
+                       color_f=platypus.color_f_black, **kwargs)
                        
 
 def plot_cos_t(model, ix, fig=None, color_f=platypus.color_f_black, f_kappa=None, **kwargs):
@@ -633,6 +633,47 @@ def plot_cos_t_decay_F_vary_gamma_E(
     if file_name:
         fig.savefig(file_name, path=path)
     return fig
+
+
+def DFRO(c, dcdx, ell):
+    return ell * dcdx / (c + 1) ** 2
+
+
+def plot_DFRO_F(model, fig=None, use_mm=True, xint=True, yint=False, n=1, color_f=platypus.greys_color_f2, x0=True, f_kappa=None, **kwargs):
+    if use_mm:
+        ratio = 1e3
+        units = 'mm'
+        if 'xlim' in kwargs:
+            kwargs['xlim'] = (kwargs['xlim'][0] / ratio,
+                              kwargs['xlim'][1] / ratio)
+    else:
+        ratio = 1
+        units = r'$\mu m$'
+    if 'ylabel' not in kwargs:
+        kwargs['ylabel'] = r'DFRO'
+    if x0 and 'xlim' in kwargs:
+        x0 = kwargs['xlim'][0]
+        kwargs['xlim'] = [0., kwargs['xlim'][1] - kwargs['xlim'][0]]
+    else:
+        x0 = 0.
+
+    Nt = model.pde_stepper.Nt
+    if n != 1:
+        pass
+    else:
+        j = 0
+        cell = model.L_cell_group[0].L_cell[0]
+        pde = model.pde_stepper.L_pde[0]
+        F = pde.u[j, 1:-1]
+        dFdx = springbok.tiger.opdudx(pde.u[j], pde.dx)
+        a = DFRO(F / cell.K_d_F, dFdx / cell.K_d_F, cell.length)
+        fig.multi_plot([model.pde_stepper.L_pde[0].x[1:-1] / ratio - x0] * n,
+#[model.pde_stepper.L_pde[0].x[1:-1]] * n,
+                       [DFRO(F / cell.K_d_F, dFdx / cell.K_d_F, cell.length)] *n,
+                       xlabel=r'x, ' + units,
+#                       ylim=(0., 1.),
+                       color_f=platypus.color_f_black,
+                       xint=xint, yint=yint, **kwargs)
 
 
 def plot_range_t_decay_F_vary_gamma_E(
@@ -1611,6 +1652,7 @@ def confection_decay_F_projector(decay_F, Style=platypus.Projector,
         fig.savefig(file_name, path=path)
     return fig
 
+
 def confection_linear(n_exo_linear, n_FPR0, Style=platypus.MBOC,
                       file_name='confection_linear',
                       xlim_lin=(0e3, 3e3), xlim_exp=(2e3, 5e3),
@@ -1648,6 +1690,64 @@ def confection_linear(n_exo_linear, n_FPR0, Style=platypus.MBOC,
     if file_name:
         fig.savefig(file_name, path=path)
     return fig
+
+
+def confection_linear_2(n_exo_linear, n_BLT0, Style=platypus.MBOC,
+                        file_name='confection_linear_2',
+                        xlim_lin=(0e3, 3e3), xlim_exp=(2e3, 5e3),
+                        **kwargs):
+    r_linear = n_exo_linear.L_runs[0]
+    r_exp = n_BLT0.L_runs[0]
+    if Style is platypus.Poster:
+        kw0 = {}
+    elif Style is platypus.Projector:
+        kw0 = dict(panesize=(3., 3.))
+        if 'linewidth' not in kwargs: kwargs['linewidth'] = 2
+        if 'markeredgewidth' not in kwargs: kwargs['markeredgewidth'] = 1.5
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+    gs = platypus.make_grid_spec(3, 2, height_ratios=[0.5, 1, 0.5], axes=Style.def_axes)
+    figsize = platypus.make_figsize(gs, kw0['panesize'])
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    path = os.path.join('plots', n_exo_linear.set_name, fig.style)
+    kwargs['xlim'] = xlim_lin
+    plot_fMLP(r_linear, fig=fig, ylabel='fMLP, $K_d$', **kwargs)
+
+    fig.add_subplot(gs[0, 1])
+    kwargs['xlim'] = xlim_exp
+    plot_fMLP(r_exp, fig=fig, ylabel='fMLP, $K_d$', **kwargs)
+
+    fig.add_subplot(gs[1, 0])
+    ax = fig.fig.gca()
+    kwargs['xlim'] = xlim_lin
+    figx = plot_tracks(r_linear, file_name=None, fig=fig, **kwargs)
+
+    fig.add_subplot(gs[1, 1])
+    kwargs['xlim'] = xlim_exp
+    figx = plot_tracks(r_exp, file_name=None, fig=fig, x0=xlim_exp[0], **kwargs)
+    fig.add_subplot(gs[2, 0])
+    kwargs['xlim'] = xlim_lin
+    ylim_DFRO = (0., 0.01)
+    plot_DFRO_F(r_linear, fig=fig, n=1, ylim=ylim_DFRO, **kwargs)
+
+    fig.add_subplot(gs[2, 1])
+    kwargs['xlim'] = xlim_exp
+    plot_DFRO_F(r_exp, fig=fig, n=1, ylim=ylim_DFRO, **kwargs)
+
+    # fig.add_subplot(gs[3, 0])
+    # kwargs['xlim'] = xlim_lin
+    # plot_cos(r_linear, fig=fig, ylabel='Directionality', ylim=(-0.1, 1.), n=1, **kwargs)
+
+    # fig.add_subplot(gs[3, 1])
+    # kwargs['xlim'] = xlim_exp
+    # plot_cos(r_exp, fig=fig, ylabel='Directionality', ylim=(-0.1, 1.), n=1, **k
+             # wargs)
+
+    fig.set_AB_labels()
+    if file_name:
+        fig.savefig(file_name, path=path)
+    return fig
+
 
 def get_range_time_averaged(model, CI_threshold):
     return np.mean([get_range(model, CI_threshold, j) for j in range(model.pde_stepper.Nt)])
