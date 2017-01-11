@@ -31,8 +31,8 @@ def run():
 #End required by Meerkat
 
 class BLT0(n_exo.Neutrophil):
-    def orient(self, L_condition, clock):
-        super().orient([L_condition[0], L_condition[1], (0., 0.)], clock)
+    def kappa(self, L_condition):
+        return super().kappa([L_condition[0], L_condition[1], (0., 0.)])
 
     def secrete(self, L_condition, clock):
         return super().secrete([L_condition[0], L_condition[1], (0., 0.)], clock)

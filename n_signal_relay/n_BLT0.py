@@ -35,7 +35,7 @@ def run():
 
 class BLT0(n_exo.Neutrophil):
     def kappa(self, L_condition):
-        super().kappa([L_condition[0], L_condition[1], (0., 0.)], clock)
+        return super().kappa([L_condition[0], L_condition[1], (0., 0.)])
 
     def secrete(self, L_condition, clock):
         return super().secrete([L_condition[0], L_condition[1], (0., 0.)], clock)
