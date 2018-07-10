@@ -1,18 +1,34 @@
+import brewer2mpl
+from collections import defaultdict
 import copy
 import flux
 import numpy as np
 from . import platypus
 import matplotlib
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 import springbok
 import os
+
+import matplotlib as mpl
+mpl.rcParams['mathtext.fontset'] = 'stix'
+
+LTB4map = 'YlOrRd'
+ExoMap = 'PuBu'
+BkMap = 'Greys'
+blues_color_f = plt.get_cmap('Blues')
+blues_color_f2 = lambda x: plt.get_cmap('Blues')(0.4 + 0.6 * x)
+greys_color_f = plt.get_cmap('Greys')
+x_color_f2 = lambda cm: lambda x: plt.get_cmap(cm)(0.4 + 0.6 * x)
+greys_color_f2 = x_color_f2('Greys')
+exo_color_f2 = platypus.x_color_f2(ExoMap)
 
 
 def plot_tracks(model, file_name=True, path=None, Style=None, fig=None,
                 color_f=platypus.color_f_color,
                 cell_group_i=0,
                 xint=True, yint=True,
-                xlim=None, use_mm=True, x0=False, **kwargs):
+                xlim=None, use_mm=True, x0=True, **kwargs):
     if use_mm:
         ratio = 1e3
     else:
@@ -335,7 +351,7 @@ def confection1(model):
         fig.multi_plot(
             [exo_pde.x] * n, exo_pde.u[::(Nt-1)/(n-1)],
             xlabel=r'x, $\mathrm{\mu m}$', ylabel='Exosomes',
-            color_f=lambda i: platypus.blues_color_f2(float(i) / n))
+            color_f=lambda i: exo_color_f2(float(i) / n))
     fig.add_subplot(6, 1, 6)
     fMLP_pde = model.pde_stepper.L_pde[0]
     if len(model.pde_stepper.L_pde) >= 2:
@@ -343,7 +359,7 @@ def confection1(model):
         fig.multi_plot(
             [LTB_pde.x] * n, LTB_pde.u[::(Nt-1)/(n-1)],
             xlabel=r'x, $\mathrm{\mu m}$', ylabel=r'$\mathrm{LTB_{4}}$',
-            color_f=lambda i: platypus.blues_color_f2(float(i) / n))
+            color_f=lambda i: exo_color_f2(float(i) / n))
 
     fig.savefig(model.name + 'confection1', path=path)
     return fig
@@ -433,7 +449,7 @@ def plot_CI_x(model, fig=None, **kwargs):
 
 
 def plot_concentration(model, pde, fig=None, n=11, use_mm=True,
-                       color_f=platypus.blues_color_f2, x0=True,
+                       color_f=exo_color_f2, x0=True,
                        **kwargs):
     if use_mm:
         ratio = 1e3
@@ -493,7 +509,7 @@ def plot_LTB(model, fig=None, use_mm=True, xint=True, yint=True, **kwargs):
     LTB_pde = model.pde_stepper.L_pde[2]
     plot_concentration(model, LTB_pde, fig=fig, use_mm=use_mm,
                        xint=xint, yint=yint,
-                       color_f=platypus.x_color_f2('Reds'),
+                       color_f=platypus.x_color_f2('YlOrRd'),
                        **kwargs)
 
 
@@ -516,7 +532,7 @@ def plot_kappa(model, fig=None, use_mm=True, xint=True, yint=True, n=11, f_kappa
                        [get_a_kappa(model, j, f_kappa=f_kappa) for j in
                         range(0, Nt, int((Nt-1) / (n - 1)))],
                        xlabel=r'x, ' + units,
-                       color_f=lambda i: platypus.blues_color_f2(float(i) / n),
+                       color_f=lambda i: exo_color_f2(float(i) / n),
                        xint=xint, yint=yint,
                        **kwargs)
     else:
@@ -618,7 +634,7 @@ def plot_cos_t_decay_F_vary_gamma_E(
         y = [np.mean(flux.mean_velocity_fast(
                     get_a_kappa(run, j))[ix]) for j in np.arange(Nt)]
         L_y.append(y)
-    #color_f = lambda x: platypus.blues_color_f2(x / len(L_x))
+    #color_f = lambda x: exo_color_f2(x / len(L_x))
     fig.multi_plot(L_x, L_y,
                    xlabel=r't, min',
                    ylim=(0., 1.),
@@ -703,7 +719,7 @@ def plot_range_t_decay_F_vary_gamma_E(
                 run, 0.5, j)
              for j in np.arange(Nt)]
         L_y.append(y)
-    #color_f = lambda x: platypus.blues_color_f2(x / len(L_x))
+    #color_f = lambda x: exo_color_f2(x / len(L_x))
     fig.multi_plot(L_x, L_y,
                    xlabel=r't, min',
                    color_f=platypus.set0noyellow_color_f,
@@ -784,7 +800,9 @@ def confection_n_FPR0_3(
     else:
         kw0 = dict(panesize=(3.3, 3.3))
     model = n_FPR0.L_runs[0]
-    gs = platypus.make_grid_spec(3, 3, height_ratios=[0.5, 1, 0.5], axes=Style.def_axes)
+#    gs = platypus.make_grid_spec(3, 3, height_ratios=[0.5, 1, 0.5], axes=Style.def_axes)
+#    gs = platypus.make_grid_spec(3, 4, height_ratios=[0.5 * 2/3, 1*2/3, 0.5 * 2/3], width_ratios=[2/3, 2/3, 2/3, 0.1], axes=Style.def_axes)
+    gs = platypus.make_grid_spec(3, 4, height_ratios=[0.5 * 2/3, 1*2/3, 0.5 * 2/3], width_ratios=[2/3, 2/3, 2/3, 0.2], axes=Style.def_axes)
     figsize = platypus.make_figsize(gs, Style.def_panesize)
     fig = Style(gs=gs, figsize=figsize, **kw0)
 
@@ -831,11 +849,31 @@ def confection_n_FPR0_3(
     fig.add_subplot(gs[2, 2])
     model = n_FPR0.L_runs[2]
     plot_LTB(model, fig=fig, ylog=False, yint=True, **kwargs)
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map('YlOrRd', 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
 
-    fig.set_AB_labels()
+    fig.set_AB_labels(xy=(-0.32, 0.9))
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map('YlOrRd', 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    ax = fig.gs[2, 2]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
     if file_name:
         path = os.path.join('plots', n_FPR0.set_name, fig.style)    
         fig.savefig(file_name, path=path)
+        fig.savefig(file_name, path=path, my_format='.png')
     return fig
 
 def confection_n_FPR0_projector(
@@ -969,7 +1007,7 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     else:
         kw0 = dict(panesize=(3.3, 3.3))
     
-    gs = platypus.make_grid_spec(3, 2, height_ratios=[0.5, 1, 0.5], axes=Style.def_axes)
+    gs = platypus.make_grid_spec(3, 3, height_ratios=[0.5, 1, 0.5], width_ratios=[1, 1, 0.15], axes=Style.def_axes)
 #    gs = platypus.make_grid_spec(4, 2, height_ratios=[0.5, 1, 0.5, 0.5], axes=Style.def_axes)
     figsize = platypus.make_figsize(gs, Style.def_panesize)
     fig = Style(gs=gs, figsize=figsize, **kw0)
@@ -980,7 +1018,7 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     fig.title('BLT+', y=0.9)
 
     fig.add_subplot(gs[1, 0])
-    plot_tracks(n_BLT0.d_runs[r_L, 0., False], file_name=False, fig=fig, **kwargs)
+    plot_tracks(n_BLT0.d_runs[r_L, 0., False], file_name=False, fig=fig, x0=True, **kwargs)
     ax = fig.fig.gca()
     model = n_BLT0.d_runs[r_L, 0., False]
     directionality = flux.mean_velocity_fast(get_a_kappa(model, 60, f_kappa=lambda L_condition: [L_condition[0], L_condition[1], (0., 0.)]))
@@ -1013,6 +1051,21 @@ def confection_n_BLT0(n_BLT0, file_name='confection_n_BLT0',
     # plot_cos(n_BLT0.d_runs[r_L, 0., True], fig=fig, ylim=(-0.1, 1.), **kwargs)
 
     fig.set_AB_labels()
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map('YlOrRd', 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    ax = fig.gs[2, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
     if file_name:
         path = os.path.join('plots', n_BLT0.set_name, fig.style)    
         fig.savefig(file_name, path=path)
@@ -1023,7 +1076,7 @@ def confection_n_BLT0_TmT(
         n_BLT0, file_name='confection_n_BLT0-TmT',
         Style=platypus.MBOC,
         xlim=(1.5e3, 3.5e3),
-        r_L=1e2,
+        r_L=4e1,
         **kwargs):
     kwargs['xlim'] = xlim
     model = n_BLT0.L_runs[0]
@@ -1147,7 +1200,7 @@ def confection_n_exo(
     kwargs['xlim'] = xlim
     model = n_exo.L_runs[0]
     axes = Style.def_axes
-    gs = platypus.make_grid_spec(5, 2, height_ratios=[0.5, 1, 0.5, 0.5, 0.5], axes=axes)
+    gs = platypus.make_grid_spec(5, 3, height_ratios=[0.5, 1, 0.5, 0.5, 0.5], width_ratios=[1, 1, 0.15], axes=axes)
     figsize = platypus.make_figsize(gs, Style.def_panesize)
     tup = (gs.get_geometry()[0], gs.get_geometry()[1], 1)
     if Style in [platypus.Poster, platypus.MBOC]:
@@ -1183,6 +1236,52 @@ def confection_n_exo(
     plot_cos(n_exo.d_runs[r_L, 1.], fig=fig, ylim=(-0.1, 1.), **kwargs)
 
     fig.set_AB_labels()
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(ExoMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[2, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map(LTB4map, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[3, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(BkMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[4, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
         fig.savefig(file_name, path=path)
@@ -1256,7 +1355,7 @@ def confection_n_exo_vary_r_L(
     kwargs['xlim'] = xlim
     model = n_exo.L_runs[0]
     axes = Style.def_axes
-    gs = platypus.make_grid_spec(3, len(L_r_L), height_ratios=[0.5, 0.5, 0.5],
+    gs = platypus.make_grid_spec(3, len(L_r_L) + 1, height_ratios=[0.5, 0.5, 0.5], width_ratios=[2/3] * len(L_r_L) + [0.15],
                                  axes=axes)
     figsize = platypus.make_figsize(gs, Style.def_panesize)
     if Style in [platypus.Poster, platypus.MBOC]:
@@ -1282,11 +1381,11 @@ def confection_n_exo_vary_r_L(
         f_kappa = lambda L_condition: cell.kappa(
             [(0., 0.), (0., 0.), L_condition[2]])
         plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
-                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 yint=False, color_f=platypus.x_color_f2('YlOrRd'),
                  f_kappa=f_kappa,
                  **kwargs)
         plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
-                 yint=False, color_f=platypus.blues_color_f2,
+                 yint=False, color_f=exo_color_f2,
                  **kwargs)
         f_kappa = lambda L_condition: cell.kappa(
             [L_condition[0], (0., 0.), (0., 0.)])
@@ -1298,6 +1397,37 @@ def confection_n_exo_vary_r_L(
                        color_f=platypus.color_f_black)
 
     fig.set_AB_labels()
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map(LTB4map, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[1, 2]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(ExoMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[2, 2]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
         fig.savefig(file_name, path=path)
@@ -1339,11 +1469,11 @@ def confection_vary_D_L(
         f_kappa = lambda L_condition: cell.kappa(
             [(0., 0.), (0., 0.), L_condition[2]])
         plot_cos(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig,
-                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 yint=False, color_f=platypus.x_color_f2('YlOrRd'),
                  f_kappa=f_kappa,
                  **kwargs)
         plot_cos(vary_D_L.d_runs[D_L, r_L, phi_E], fig=fig,
-                 yint=False, color_f=platypus.blues_color_f2,
+                 yint=False, color_f=exo_color_f2,
                  **kwargs)
         f_kappa = lambda L_condition: cell.kappa(
             [L_condition[0], (0., 0.), (0., 0.)])
@@ -1365,7 +1495,7 @@ def confection_vary_gamma_L(
         vary_gamma_L, file_name='confection_vary_gamma_L',
         Style=platypus.MBOC,
         xlim=(1e3, 4e3),
-        L_gamma_L=[0.08, 4/15, 2.], L_0=1e0, phi_E=0.,
+        L_gamma_L=[0.1, 4/15, 2.], L_0=1e0, phi_E=0.,
         **kwargs):
     kwargs['xlim'] = xlim
     model = vary_gamma_L.L_runs[0]
@@ -1396,11 +1526,11 @@ def confection_vary_gamma_L(
         f_kappa = lambda L_condition: cell.kappa(
             [(0., 0.), (0., 0.), L_condition[2]])
         plot_cos(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig,
-                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 yint=False, color_f=platypus.x_color_f2('YlOrRd'),
                  f_kappa=f_kappa,
                  **kwargs)
         plot_cos(vary_gamma_L.d_runs[gamma_L, L_0, phi_E], fig=fig,
-                 yint=False, color_f=platypus.blues_color_f2,
+                 yint=False, color_f=exo_color_f2,
                  **kwargs)
         f_kappa = lambda L_condition: cell.kappa(
             [L_condition[0], (0., 0.), (0., 0.)])
@@ -1453,11 +1583,11 @@ def confection_vary_gamma_L_2(
         f_kappa = lambda L_condition: cell.kappa(
             [(0., 0.), (0., 0.), L_condition[2]])
         plot_cos(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig,
-                 yint=False, color_f=platypus.x_color_f2('Reds'),
+                 yint=False, color_f=platypus.x_color_f2('YlOrRd'),
                  f_kappa=f_kappa,
                  **kwargs)
         plot_cos(vary_gamma_L_2.d_runs[gamma_L, L_00, phi_E], fig=fig,
-                 yint=False, color_f=platypus.blues_color_f2,
+                 yint=False, color_f=exo_color_f2,
                  **kwargs)
         f_kappa = lambda L_condition: cell.kappa(
             [L_condition[0], (0., 0.), (0., 0.)])
@@ -1561,7 +1691,7 @@ def confection_decay_F(decay_F, Style=platypus.MBOC,
         kw0 = dict(panesize=(3., 3.))
     else:
         kw0 = dict(panesize=(3.3, 3.3))
-    gs = platypus.make_grid_spec(5, 2, height_ratios=[1, 0.5, 0.5, 0.5, 0.5], axes=Style.def_axes)
+    gs = platypus.make_grid_spec(5, 3, height_ratios=[1, 0.5, 0.5, 0.5, 0.5], width_ratios=[1, 1, 0.15], axes=Style.def_axes)
     figsize = platypus.make_figsize(gs, kw0['panesize'])
     fig = Style(gs=gs, figsize=figsize, **kw0)
     path = os.path.join('plots', decay_F.set_name, fig.style)
@@ -1596,6 +1726,52 @@ def confection_decay_F(decay_F, Style=platypus.MBOC,
     fig.add_subplot(gs[4, 1])
     plot_cos(decay_F.d_runs[r_L, 1.], fig=fig, ylim=(-0.1, 1.), **kwargs)
     fig.set_AB_labels()
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(ExoMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[2, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map(LTB4map, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[3, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(BkMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[4, 1]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
     if file_name:
         fig.savefig(file_name, path=path)
     return fig
@@ -1858,19 +2034,24 @@ def plot_range_vary_r_L(n_exo, fig=None, Style=platypus.MBOC,
         ratio = 1
         units = r'$\mu m$'
     if fig is None:
-        fig = Style(subplot=(1, 2, 1))
+        #        fig = Style(subplot=(1, 2, 1))
+        fig = Style(subplot=(1, 1, 1), legend_bbox=(0.03, 1.))
     figx = platypus.multi_plot(
         [n_exo.L_r_L] * len(n_exo.L_phi_E),
         [[get_range_continuous(n_exo.d_runs[r_L, phi_E], 0.5, 60) / ratio
           for r_L in n_exo.L_r_L] for phi_E in n_exo.L_phi_E],
         xlog=True,
-        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
         xlabel='Characteristic LTB$_4$ secretion rate, $r_L$, $K_d/\mathrm{min}$',
         xlim=xlim,
         ylabel='Recruitment range, ' + units,
         ylim=(0., 2000. / ratio),
         color_f=platypus.set0noyellow_color_f,
-        fig=fig, **kwargs)
+        fig=fig,
+        **kwargs)
+    fig.legend([r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
+               loc='upper left')
+
+
     if file_name:
         path = os.path.join('plots', n_exo.set_name, fig.style)    
         fig.savefig(file_name, path=path)
@@ -2065,6 +2246,288 @@ def plot_range_vary_gamma_E(decay_F_vary_gamma_E, fig=None, Style=platypus.MBOC,
         path = os.path.join('plots', decay_F_vary_gamma_E.set_name, fig.style)    
         fig.savefig(file_name, path=path)
     return figx
+
+
+def table_to_d_and_L(table):
+    L0 = []
+    L1 = []
+    d = {}
+    for row in table:
+        if row[0] not in L0:
+            L0.append(row[0])
+        if row[1] not in L1:
+            L1.append(row[1])
+        d[row[0], row[1]] = row[2:]
+    L0.sort()
+    L1.sort()
+    return (L0, L1, d)
+
+
+def table_to_d_and_L_max(table):
+    L0 = []
+    L1 = []
+    d = defaultdict(lambda: [])
+    for row in table:
+        if row[0] not in L0:
+            L0.append(row[0])
+        if row[1] not in L1:
+            L1.append(row[1])
+        d[row[0], row[1]].append(row[2:])
+    L0.sort()
+    L1.sort()
+    d = {k: np.array(d[k]) for k in d}
+    return (L0, L1, d)
+
+
+def plot_range_vary_r_L_table(n_exo_table, set_name, fig=None,
+                              Style=platypus.MBOC,
+                              xlim=(1e-3, 1e4),
+                              file_name='vary-r_L', use_mm=True, **kwargs):
+    (L_r_L, L_phi_E, d_range) = table_to_d_and_L(n_exo_table)
+    if use_mm:
+        ratio = 1e3
+        units = 'mm'
+    else:
+        ratio = 1
+        units = r'$\mu m$'
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    figx = platypus.multi_plot(
+        [L_r_L] * len(L_phi_E),
+        [[d_range[r_L, phi_E][0] / ratio for r_L in L_r_L] for phi_E in L_phi_E],
+        xlog=True,
+        L_legend=[r'$\phi_E={}$'.format(phi_E) for phi_E in L_phi_E],
+        xlabel='Characteristic LTB$_4$ secretion rate, $r_L$, $K_d/\mathrm{min}$',
+        xlim=xlim,
+        ylabel='Recruitment range, ' + units,
+        ylim=(0., 2000. / ratio),
+        color_f=platypus.set0noyellow_color_f,
+        fig=fig, **kwargs)
+    if file_name:
+        path = os.path.join('plots', set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+
+def plot_range_vary_gamma_L_table(vary_gamma_L_table, set_name, fig=None,
+                              Style=platypus.MBOC,
+                              xlim=(1e-3, 1e4), legend=True,
+                              file_name='vary-gamma_L', use_mm=True, **kwargs):
+    (L_gamma_L, L_phi_E, d_range) = table_to_d_and_L(vary_gamma_L_table)
+    if use_mm:
+        ratio = 1e3
+        units = 'mm'
+    else:
+        ratio = 1
+        units = r'$\mu m$'
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    if legend:
+        L_legend = [r'$\phi_E={}$'.format(phi_E) for phi_E in L_phi_E]
+    else:
+        L_legend = None
+    figx = platypus.multi_plot(
+        [L_gamma_L] * len(L_phi_E),
+        [[d_range[gamma_L, phi_E][-1] / ratio for gamma_L in L_gamma_L] for phi_E in L_phi_E],
+        xlog=True,
+        L_legend=L_legend,
+        xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
+        xlim=xlim,
+        ylabel='Recruitment range, ' + units,
+        ylim=(0., 2000. / ratio),
+        color_f=platypus.set0noyellow_color_f,
+        fig=fig, **kwargs)
+    if file_name:
+        path = os.path.join('plots', set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+
+def plot_range_vary_gamma_L_3_table(
+        vary_gamma_L_table, set_name, fig=None,
+        Style=platypus.MBOC,
+        xlim=(1e-3, 1e4), legend=True,
+        file_name='vary-gamma_L_3', use_mm=True, **kwargs):
+    (L_gamma_L, L_phi_E, d_range) = table_to_d_and_L_max(vary_gamma_L_table)
+    if use_mm:
+        ratio = 1e3
+        units = 'mm'
+    else:
+        ratio = 1
+        units = r'$\mu m$'
+    if fig is None:
+        fig = Style(subplot=(1, 2, 1))
+    if legend:
+        L_legend = [r'$\phi_E={}$'.format(phi_E) for phi_E in L_phi_E]
+    else:
+        L_legend = None
+    figx = platypus.multi_plot(
+        [L_gamma_L] * len(L_phi_E),
+        [[np.max(d_range[gamma_L, phi_E][:, -1]) / ratio for gamma_L in L_gamma_L] for phi_E in L_phi_E],
+        xlog=True,
+        L_legend=L_legend,
+        xlabel=r'LTB$_4$ dissipation rate, $\gamma_L$, 1/min',
+        xlim=xlim,
+        ylabel='Maximum recruitment range, ' + units,
+        ylim=(0., 2000. / ratio),
+        color_f=platypus.set0noyellow_color_f,
+        fig=fig, **kwargs)
+    if file_name:
+        path = os.path.join('plots', set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return figx
+
+
+def plot_range_table(n_exo_table, vary_gamma_L_table, vary_gamma_L_3_table,
+                     set_name, Style=platypus.MBOC, file_name='range_table'):
+    if Style is platypus.Poster:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3), xlabelpad=2)
+    fig = Style(subplot=(2, 2, 1), **kw0)
+    figx = plot_range_vary_r_L_table(n_exo_table, None, fig=fig, file_name=None)
+    fig.add_subplot(2, 2, 3)
+    figx = plot_range_vary_gamma_L_table(vary_gamma_L_table, None, fig=fig, file_name=None, legend=False)
+    fig.add_subplot(2, 2, 4)
+    figx = plot_range_vary_gamma_L_3_table(vary_gamma_L_3_table, None, fig=fig, file_name=None, legend=False)
+    fig.set_AB_labels(loc='upper right')
+    if file_name:
+        path = os.path.join('plots', set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+    return fig
+
+
+def plot_range_confection(n_exo, fig=None, Style=platypus.MBOC,
+                          file_name='range-confection', use_mm=True, **kwargs):
+    if use_mm:
+        ratio = 1e3
+        units = 'mm'
+    else:
+        ratio = 1
+        units = r'$\mu m$'
+    L_r_L=[1e0, 1e1, 1e3]
+    phi_E=0.
+    model = n_exo.L_runs[0]
+    axes = Style.def_axes
+    gs = platypus.make_grid_spec(4, len(L_r_L) + 1,
+        height_ratios=[4/3, 0.5, 0.5, 0.5], width_ratios=[2/3] * len(L_r_L) + [0.2],
+        axes=axes)
+    figsize = platypus.make_figsize(gs, Style.def_panesize)
+    if Style in [platypus.Poster, platypus.MBOC]:
+        kw0 = {}
+    else:
+        kw0 = dict(panesize=(3.3, 3.3))
+
+    fig = Style(gs=gs, figsize=figsize, **kw0)
+    fig.fig.delaxes(fig.fig.gca())
+    fig.add_subplot(gs[0, 0:2])
+    figx = platypus.multi_plot(
+        [n_exo.L_r_L] * len(n_exo.L_phi_E),
+        [[get_range_continuous(n_exo.d_runs[r_L, phi_E], 0.5, 60) / ratio
+          for r_L in n_exo.L_r_L] for phi_E in n_exo.L_phi_E],
+        xlog=True,
+        xlabel='Characteristic LTB$_4$ secretion rate, $r_L$, $K_d/\mathrm{min}$',
+        xlim=(1e-3, 1e4),
+        ylabel='Recruitment range, ' + units,
+        ylim=(0., 2000. / ratio),
+        color_f=platypus.set0noyellow_color_f,
+        fig=fig,
+        **kwargs)
+    fig.legend([r'$\phi_E={}$'.format(phi_E) for phi_E in n_exo.L_phi_E],
+               loc='upper left')
+
+    xlim=(1e3, 4e3)
+    kwargs['xlim'] = xlim
+    for (i, r_L) in enumerate(L_r_L):
+        fig.add_subplot(gs[0 + 1, i])
+        plot_fMLP(n_exo.d_runs[r_L, phi_E], fig=fig, ylog=False, **kwargs)
+        fig.title(r'$r_L={}$'.format(int(r_L)), y=1)
+
+    
+    for (i, r_L) in enumerate(L_r_L):
+        fig.add_subplot(gs[1 + 1, i])
+        plot_LTB(n_exo.d_runs[r_L, phi_E], fig=fig, **kwargs)
+
+    for (i, r_L) in enumerate(L_r_L):
+        fig.add_subplot(gs[2 + 1, i])
+        cell = n_exo.d_runs[r_L, phi_E].L_cell_group[0].L_cell[0]
+        f_kappa = lambda L_condition: cell.kappa(
+            [(0., 0.), (0., 0.), L_condition[2]])
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.x_color_f2('YlOrRd'),
+                 f_kappa=f_kappa,
+                 **kwargs)
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=exo_color_f2,
+                 **kwargs)
+        f_kappa = lambda L_condition: cell.kappa(
+            [L_condition[0], (0., 0.), (0., 0.)])
+        plot_cos(n_exo.d_runs[r_L, phi_E], fig=fig,
+                 yint=False, color_f=platypus.greys_color_f,
+                 f_kappa=f_kappa,
+                 **kwargs)
+        fig.multi_plot([[0., 7.]], [[0.5, 0.5]], L_linestyle=['--'],
+                       color_f=platypus.color_f_black)
+
+#    fig.set_AB_labels()
+
+    ax = fig.fig.get_axes()[0]
+    ax.text(-0.1, 0.975, 'A',
+             font_properties=fig.AB_font_properties,
+             horizontalalignment='right',
+             transform=ax.transAxes)
+
+    ax = fig.fig.get_axes()[1]
+    ax.text(-0.25, 0.975, 'B',
+             font_properties=fig.AB_font_properties,
+             horizontalalignment='right',
+             transform=ax.transAxes)
+
+    x = -0.15
+    y = 0.975
+    L_labels = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x']
+    for (j, ax) in enumerate(fig.fig.get_axes()[1:]):
+        ax.text(x, y, L_labels[j],
+                font_properties=fig.AB_font_properties,
+                horizontalalignment='right',
+                transform=ax.transAxes)
+
+
+    nz = matplotlib.colors.Normalize(vmin=0., vmax=60.)
+    cm = brewer2mpl.get_map(LTB4map, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[2, 2]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    nz = matplotlib.colors.Normalize(vmin=-40., vmax=60.)
+    cm = brewer2mpl.get_map(ExoMap, 'Sequential', 9).mpl_colormap
+    sm = matplotlib.cm.ScalarMappable(norm=nz, cmap=cm)
+    sm.set_array(np.array([0, 60]) / 1000.)
+    sm.set_clim(0., 60.)
+    ax = fig.gs[3, 2]
+    bb = ax.get_position(fig.fig)
+    fig.cax = fig.fig.add_axes([bb.x1 + 0.01, bb.y0, 0.01, bb.y1 - bb.y0])
+    fig.cb = fig.fig.colorbar(sm, norm=nz, cax=fig.cax, ticks=np.arange(0., 60 + 1, 12.))
+    fig.cax.set_ylabel('Time, min', font_properties=fig.font_properties)
+    cbytick_obj = plt.getp(fig.cb.ax.axes, 'yticklabels')
+    tick_font_properties = fig.font_properties.copy()
+    tick_font_properties.set_size(8)
+    plt.setp(cbytick_obj, font_properties=tick_font_properties)
+
+    if file_name:
+        path = os.path.join('plots', n_exo.set_name, fig.style)    
+        fig.savefig(file_name, path=path)
+#        fig.savefig(file_name, path=path, my_format='.png')
+    return fig
 
 
 def figure_decay_F_vary_gamma_E(
