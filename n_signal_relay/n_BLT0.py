@@ -41,17 +41,18 @@ class BLT0(n_exo.Neutrophil):
         return super().secrete([L_condition[0], L_condition[1], (0., 0.)], clock)
 
 
-def new_setup_random_N_BLT0(d_N_props=None, has_BLT=True, **kwargs):
+def new_setup_random_N_BLT0(d_N_props=None, has_BLT=True, seed=0, **kwargs):
     n_neutrophil = d_N_props.pop('n')
     x_max = d_N_props.pop('x_max')
     if has_BLT:
         CellType = n_exo.Neutrophil
     else:
         CellType = BLT0
+    random_state = np.random.RandomState(seed)
     cg = springbok.RectCellGroup(
         CellType,
         np.array([0., -x_max / 2.]), np.array([x_max, x_max / 2.]),
-        n_neutrophil, **d_N_props)
+        n_neutrophil, random_state=random_state, **d_N_props)
     return n_exo.new_setup(L_cell_group=[cg], **kwargs)
 
 
@@ -74,5 +75,6 @@ def setup(r_L, phi_E, has_BLT):
     jn = job_name(r_L, phi_E, has_BLT)
     run = make_r_L_phi_E(r_L=r_L, phi_E=phi_E, has_BLT=has_BLT)
     run.job_name = jn
+    run.meta = [r_L, phi_E, has_BLT]
     with open(jn + '.pkl', 'wb') as hout:
         cloudpickle.dump(run, hout)

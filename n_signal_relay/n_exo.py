@@ -41,7 +41,7 @@ class Neutrophil(springbok.Cell):
             sensitivity_F=None, sensitivity_L=None, F_xt=None,
             sigma_CL0=None, F_CL=None, b_L=None, sigma_CE0=None, b_E=None,
             F_CE=None,
-            n_t=None, xy_0=None, K_d_F=None, K_d_L=None, index=None):
+            n_t=None, xy_0=None, K_d_F=None, K_d_L=None, random_state=None):
         self.length = length
         self.sensitivity_F = sensitivity_F
         self.sensitivity_L = sensitivity_L
@@ -54,8 +54,7 @@ class Neutrophil(springbok.Cell):
         self.K_d_F = K_d_F
         self.K_d_L = K_d_L
         self.n_t = n_t
-        self.index = index
-        self.random_state = np.random.RandomState(index)
+        self.random_state = random_state
         self.F_xt = F_xt
         self.sigma_CL0 = sigma_CL0
         self.b_L = b_L
@@ -202,14 +201,15 @@ def new_setup(
     return model
 
 
-def new_setup_random_N(d_N_props=None, **kwargs):
+def new_setup_random_N(d_N_props=None, seed=0, **kwargs):
     CellType = Neutrophil
     n_neutrophil = d_N_props.pop('n')
     x_max = d_N_props.pop('x_max')
+    random_state = np.random.RandomState(kwargs.pop('seed'))
     cg = springbok.RectCellGroup(
         CellType,
         np.array([0., -x_max / 2.]), np.array([x_max, x_max / 2.]),
-        n_neutrophil, **d_N_props)
+        n_neutrophil, random_state=random_state, **d_N_props)
     return new_setup(L_cell_group=[cg], **kwargs)
 
 

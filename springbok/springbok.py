@@ -29,11 +29,11 @@ class CellGroup:
 
 
 class RectCellGroup(CellGroup):
-    def __init__(self, CellType, xya, xyb, n_cell, seed=0, **kwargs):
+    def __init__(self, CellType, xya, xyb, n_cell, random_state=None, **kwargs):
         self.xya = xya
         self.xyb = xyb
-        self.random_state = np.random.RandomState(seed)
-        L_cell = [CellType(xy_0=xy_0, index=(j + seed), **kwargs)
+        self.random_state = random_state
+        L_cell = [CellType(xy_0=xy_0, random_state=self.random_state, **kwargs)
                   for (j, xy_0) in
                   enumerate((xyb - xya) * self.random_state.rand(n_cell, 2) +
                             xya)]
