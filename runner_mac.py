@@ -2,6 +2,8 @@
 import sys
 import pickle
 import cloudpickle
+import numpy as np
+import post_processing
 import os
 import stat
 
@@ -41,7 +43,6 @@ def main(argv=None):
     with open(fname + '.run' + ext, 'wb') as hout:
         cloudpickle.dump(model, hout)
 
-    return model
 
 if __name__ == "__main__":
     sys.exit(main())
