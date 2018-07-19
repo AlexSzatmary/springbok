@@ -205,7 +205,7 @@ def new_setup_random_N(d_N_props=None, seed=0, **kwargs):
     CellType = Neutrophil
     n_neutrophil = d_N_props.pop('n')
     x_max = d_N_props.pop('x_max')
-    random_state = np.random.RandomState(kwargs.pop('seed'))
+    random_state = np.random.RandomState(seed)
     cg = springbok.RectCellGroup(
         CellType,
         np.array([0., -x_max / 2.]), np.array([x_max, x_max / 2.]),
