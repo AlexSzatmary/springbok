@@ -1,4 +1,4 @@
-#meerkat-copy springbok runner_range_performance.py n_signal_relay/n_exo.py
+#meerkat-copy springbok runner_range_bridges.py n_signal_relay/n_exo.py
 #meerkat-copy flux.py post_processing
 import sys
 import springbok
@@ -6,7 +6,7 @@ import n_exo
 import cloudpickle
 import os
 import numpy as np
-import runner_range_performance as runner_range
+import runner_range_bridges as runner_range
 
 
 L_r_L = [1e1]

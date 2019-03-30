@@ -1,4 +1,4 @@
-#meerkat-copy springbok runner_vary_gamma_L.py n_signal_relay/n_exo.py
+#meerkat-copy springbok runner_range_bridges.py n_signal_relay/n_exo.py
 #meerkat-copy flux.py post_processing
 import sys
 import springbok
@@ -6,7 +6,7 @@ import n_exo
 import cloudpickle
 import os
 import numpy as np
-import runner_vary_gamma_L
+import runner_range_bridges
 
 
 #L_r_L = [1e6]

@@ -19,7 +19,7 @@ L_p = [0.5, 1., 2., 4.]
 # Required by Meerkat
 L_variables = [L_r_L, L_phi_E, L_p]
 
-one_job = True
+one_job = False
 
 if one_job:
     L_variables = [[L[0]] for L in L_variables]
@@ -128,5 +128,6 @@ def setup(r_L, phi_E, p):
     jn = job_name(r_L, phi_E, p)
     run = make_r_L_phi_E(r_L=r_L, phi_E=phi_E, p=p)
     run.job_name = jn
+    run.meta = [r_L, phi_E, p]
     with open(jn + '.pkl', 'wb') as hout:
         cloudpickle.dump(run, hout)
